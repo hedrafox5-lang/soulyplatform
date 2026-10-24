@@ -16,14 +16,32 @@
             <div class="space-y-3 max-w-2xl">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyber-cyan/10 border border-cyber-cyan/30 text-cyber-cyan text-xs font-mono">
                     <span class="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse"></span>
-                    <span>PHASE 1 CORE ARCHITECTURE: DEPLOYED</span>
+                    <span>PHASE 3: DUAL-SHELL & CINEMATIC ENGINE READY</span>
                 </div>
                 <h1 class="text-2xl lg:text-4xl font-extrabold text-white font-cairo leading-tight">
                     منظومة <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan via-cyber-gold to-cyber-purple">سولي ديدجيتال سيتادل</span> الرقمية
                 </h1>
                 <p class="text-sm lg:text-base text-slate-300 font-readex leading-relaxed">
-                    منصة الجيل القادم لسيادة العمليات والتجارة الذكية والتحكم الميداني. مدعومة بمعمارية Native-First فائقة السرعة على خادم Laravel 13 و Alpine.js و GSAP ومحرك التخزين الفولاذي SoulyDB.
+                    منصة الجيل القادم لسيادة العمليات والتجارة الذكية والتحكم الميداني. مدعومة بمعمارية Native-First فائقة السرعة على خادم Laravel 13 و Alpine.js و GSAP، ومحرك التخزين الفولاذي SoulyDB، وعارض القصص السينمائي المدمج.
                 </p>
+
+                <!-- Action Controls: Replay Loader & Open AI -->
+                <div class="flex flex-wrap items-center gap-3 pt-2">
+                    <button onclick="SoulyLoader.replay()" 
+                            class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyber-purple/40 to-obsidian-surface border border-cyber-purple hover:border-cyber-cyan text-white text-xs font-cairo font-bold shadow-neon-purple hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4 text-cyber-cyan animate-spin" style="animation-duration: 8s;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>إعادة العرض السينمائي (25 ثانية)</span>
+                    </button>
+
+                    <button @click="$dispatch('open-ai-chat-sheet')" 
+                            class="px-4 py-2.5 rounded-xl bg-cyber-cyan/10 hover:bg-cyber-cyan/20 border border-cyber-cyan/40 text-cyber-cyan text-xs font-cairo font-bold hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyber-cyan animate-ping"></span>
+                        <span>شات سولي AI الفوري</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Quick Telemetry HUD Card -->
@@ -33,8 +51,8 @@
                     <span class="text-lg font-bold font-mono text-cyber-cyan">Laravel 13.38</span>
                 </div>
                 <div class="p-4 rounded-2xl bg-obsidian-surface border border-obsidian-border/80">
-                    <span class="text-[11px] font-mono text-slate-400 block">بيئة التشغيل</span>
-                    <span class="text-lg font-bold font-mono text-cyber-gold">PHP 8.3.36</span>
+                    <span class="text-[11px] font-mono text-slate-400 block">رصيد المحفظة</span>
+                    <span class="text-lg font-bold font-mono text-cyber-gold" x-text="`${$store.citadel.walletBalance} EGP`">{{ $citadelWalletBalance ?? '3,500.00' }} EGP</span>
                 </div>
                 <div class="p-4 rounded-2xl bg-obsidian-surface border border-obsidian-border/80">
                     <span class="text-[11px] font-mono text-slate-400 block">قاعدة البيانات</span>
@@ -48,65 +66,100 @@
         </div>
     </div>
 
-    <!-- Interactive Citadel Telemetry Cards Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        <!-- Node 1: High Availability Storage -->
-        <div class="p-5 rounded-2xl glass-obsidian border border-obsidian-border hover:border-cyber-cyan/50 transition-all duration-300 group">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-10 h-10 rounded-xl bg-cyber-cyan/10 border border-cyber-cyan/30 flex items-center justify-center text-cyber-cyan group-hover:scale-110 transition-transform">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1.5 3 3.5 3h9c2 0 3.5-1 3.5-3V7c0-2-1.5-3-3.5-3h-9C5.5 4 4 5 4 7z" />
-                    </svg>
-                </div>
-                <span class="text-[11px] font-mono text-cyber-cyan uppercase" x-text="`TIER: ${$store.citadel.storageEngine}`">TIER: IDB</span>
+    <!-- The 6 Core Services & 0ms Interactive Icon Engine Showcase -->
+    <div id="services" class="space-y-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-xl sm:text-2xl font-extrabold text-white font-cairo flex items-center gap-2.5">
+                    <span class="w-3 h-3 rounded-full bg-cyber-cyan animate-pulse"></span>
+                    <span>منظومة الخدمات السيادية الست (Interactive Matrix)</span>
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-400 mt-1 font-readex">
+                    اضغط على أي ميزة أو نشاط لفتح نافذة التفاصيل الفورية بمحرك الـ 0ms المنبثق (Modal على الحاسوب و Bottom Sheet على الموبايل).
+                </p>
             </div>
-            <h3 class="font-bold text-base text-slate-100 font-cairo">محرك SoulyDB التراكمي</h3>
-            <p class="text-xs text-slate-400 mt-1">تخزين IndexedDB مرن ومصفح ببدائل التخزين اللحظي والذاكرة لتفادي قيود التصفح الخفي.</p>
         </div>
 
-        <!-- Node 2: Native-First Performance -->
-        <div class="p-5 rounded-2xl glass-obsidian border border-obsidian-border hover:border-cyber-gold/50 transition-all duration-300 group">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-10 h-10 rounded-xl bg-cyber-gold/10 border border-cyber-gold/30 flex items-center justify-center text-cyber-gold group-hover:scale-110 transition-transform">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                </div>
-                <span class="text-[11px] font-mono text-cyber-gold">ZERO-SPA LAG</span>
-            </div>
-            <h3 class="font-bold text-base text-slate-100 font-cairo">بنية Native-First الصافية</h3>
-            <p class="text-xs text-slate-400 mt-1">استغناء كامل عن Livewire و React لصالح Blade و Alpine.js خفيف الوزن واستجابة فورية.</p>
-        </div>
+        <!-- Services Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            @forelse($citadelServices as $service)
+                <div class="glass-obsidian rounded-2xl border border-obsidian-border p-5 hover:border-cyber-cyan/40 transition-all duration-300 group flex flex-col justify-between">
+                    <div>
+                        <!-- Header & Badge -->
+                        <div class="flex items-start justify-between gap-3 mb-3">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-obsidian-surface text-cyber-cyan border border-cyber-cyan/30">
+                                {{ $service->hero_badge ?? 'خدمة سيادية' }}
+                            </span>
+                            <span class="text-xs font-mono text-slate-500">ORD: #{{ $service->display_order }}</span>
+                        </div>
 
-        <!-- Node 3: RTL & Localization -->
-        <div class="p-5 rounded-2xl glass-obsidian border border-obsidian-border hover:border-cyber-purple/50 transition-all duration-300 group">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-10 h-10 rounded-xl bg-cyber-purple/10 border border-cyber-purple/30 flex items-center justify-center text-cyber-purple group-hover:scale-110 transition-transform">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                    </svg>
-                </div>
-                <span class="text-[11px] font-mono text-cyber-purple">AR-EG RTL</span>
-            </div>
-            <h3 class="font-bold text-base text-slate-100 font-cairo">تعريب ونمط RTL أصيل</h3>
-            <p class="text-xs text-slate-400 mt-1">توافق قياسي للغة العربية، خطوط Cairo & Readex Pro، وتوقيت القاهرة المحلي (Africa/Cairo).</p>
-        </div>
+                        <h3 class="text-lg font-bold text-white font-cairo group-hover:text-cyber-cyan transition-colors">
+                            {{ $service->name }}
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-1.5 leading-relaxed font-readex line-clamp-2">
+                            {{ $service->tagline ?? $service->short_description }}
+                        </p>
 
-        <!-- Node 4: Dynamic Responsive Shell -->
-        <div class="p-5 rounded-2xl glass-obsidian border border-obsidian-border hover:border-emerald-500/50 transition-all duration-300 group">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                </div>
-                <span class="text-[11px] font-mono text-emerald-400">DESKTOP / MOBILE</span>
-            </div>
-            <h3 class="font-bold text-base text-slate-100 font-cairo">هيكل تكيفي مزدوج</h3>
-            <p class="text-xs text-slate-400 mt-1">تخطيط Wide Command Center للأجهزة المكتبية وهيكل Native Shell مع Bottom Bar للهواتف.</p>
-        </div>
+                        <!-- Service Icons Interactive Triggers -->
+                        @if($service->icons->isNotEmpty())
+                            <div class="mt-4 pt-3 border-t border-obsidian-border/60">
+                                <span class="text-[10px] font-mono uppercase text-slate-500 block mb-2 font-bold">المزايا والأنشطة (انقر للاستعراض):</span>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($service->icons as $icon)
+                                        <button type="button" 
+                                                data-icon-popup
+                                                data-icon-id="{{ $icon->id }}"
+                                                data-icon-title="{{ $icon->title }}"
+                                                data-icon-badge="{{ $icon->badge_text }}"
+                                                data-icon-summary="{{ $icon->popup_summary }}"
+                                                data-icon-bullets="{{ json_encode($icon->popup_bullets_json) }}"
+                                                data-service-name="{{ $service->name }}"
+                                                data-cta-text="{{ $icon->popup_cta_text }}"
+                                                class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-obsidian-surface/90 hover:bg-cyber-cyan/10 border border-obsidian-border hover:border-cyber-cyan/40 text-xs font-cairo text-slate-300 hover:text-cyber-cyan active:scale-95 transition-all">
+                                            <span class="w-1.5 h-1.5 rounded-full" style="background-color: {{ $service->accent_color ?? '#00F5D4' }};"></span>
+                                            <span>{{ $icon->title }}</span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </div>
 
+                    <!-- Package Pricing Preview & CTA -->
+                    <div class="mt-5 pt-3 border-t border-obsidian-border flex items-center justify-between">
+                        @if($service->packages->isNotEmpty())
+                            @php $pkg = $service->packages->first(); @endphp
+                            <div>
+                                <span class="text-[10px] font-mono text-slate-500 block">تبدأ من:</span>
+                                <span class="text-sm font-bold font-mono text-cyber-gold">{{ number_format($pkg->price, 0) }} EGP</span>
+                                <span class="text-[10px] text-slate-400">{{ $pkg->unit_label }}</span>
+                            </div>
+                        @else
+                            <span class="text-xs text-slate-500 font-mono">باقات مخصصة</span>
+                        @endif
+
+                        <button type="button" 
+                                @click="$dispatch('open-icon-popup', {
+                                    id: 'svc_{{ $service->id }}',
+                                    title: '{{ $service->name }}',
+                                    badge_text: '{{ $service->hero_badge ?? 'نظرة عامة' }}',
+                                    popup_title: '{{ $service->name }}',
+                                    popup_summary: '{{ addslashes($service->short_description) }}',
+                                    popup_bullets: {{ json_encode($service->packages->pluck('name')->toArray()) }},
+                                    service_name: 'سولي سيتادل',
+                                    popup_cta_text: 'احجز هذه المنظومة الآن'
+                                })"
+                                class="px-3.5 py-1.5 rounded-xl bg-obsidian-surface hover:bg-cyber-cyan/20 border border-cyber-cyan/30 text-cyber-cyan font-cairo font-bold text-xs transition-all">
+                            استكشاف وتفاصيل
+                        </button>
+                    </div>
+                </div>
+            @empty
+                <div class="col-span-full p-8 text-center glass-obsidian rounded-2xl border border-obsidian-border text-slate-400">
+                    جاري مزامنة بيانات الخدمات من قاعدة البيانات...
+                </div>
+            @endforelse
+        </div>
     </div>
 
     <!-- Live Demonstration & Storage Test Console -->

@@ -50,19 +50,38 @@
                 </div>
             </div>
 
-            <!-- Right: Real-time Telemetry & Node Operator -->
-            <div class="flex items-center gap-4">
+            <!-- Right: Real-time Telemetry, Wallet Pill & Controls -->
+            <div class="flex items-center gap-3">
+                <!-- Replay Cinematic Story Loader Button -->
+                <button onclick="SoulyLoader.replay()" 
+                        title="إعادة العرض السينمائي (25 ثانية)"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-obsidian-surface border border-obsidian-border text-slate-300 hover:text-cyber-cyan hover:border-cyber-cyan/40 text-xs font-cairo transition-all">
+                    <svg class="w-3.5 h-3.5 text-cyber-cyan animate-spin" style="animation-duration: 10s;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="hidden xl:inline">العرض السينمائي</span>
+                </button>
+
+                <!-- Quick Wallet Balance Pill -->
+                <a href="{{ url('/portal') }}" 
+                   class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-obsidian-surface to-obsidian-card border border-cyber-cyan/40 hover:border-cyber-cyan text-xs font-mono shadow-sm hover:shadow-neon-cyan transition-all">
+                    <div class="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse"></div>
+                    <span class="text-slate-400 text-[11px]">محفظتي:</span>
+                    <span class="text-cyber-cyan font-bold" x-text="`${$store.citadel.walletBalance} EGP`">{{ $citadelWalletBalance ?? '3,500.00' }} EGP</span>
+                </a>
+
                 <!-- Cairo Time Status -->
-                <div class="hidden md:flex flex-col items-end border-l border-obsidian-border pl-4">
-                    <span class="text-[11px] text-slate-400 font-mono">توقيت القاهرة (UTC+3)</span>
+                <div class="hidden 2xl:flex flex-col items-end border-l border-obsidian-border pl-3">
+                    <span class="text-[10px] text-slate-400 font-mono">القاهرة (UTC+3)</span>
                     <span class="text-xs font-mono font-bold text-cyber-gold" x-text="$store.citadel.cairoTime">--:--:--</span>
                 </div>
 
                 <!-- Live Node Telemetry Pulse -->
-                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-obsidian-surface border border-obsidian-border">
-                    <span class="relative flex h-2.5 w-2.5">
+                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-obsidian-surface border border-obsidian-border">
+                    <span class="relative flex h-2 w-2">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-cyan opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyber-cyan"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-cyber-cyan"></span>
                     </span>
                     <span class="text-[11px] font-mono text-slate-300">PING: <strong class="text-cyber-cyan" x-text="$store.citadel.nodePing">12ms</strong></span>
                 </div>

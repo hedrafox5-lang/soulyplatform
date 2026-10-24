@@ -55,6 +55,24 @@
 
     <!-- Color Variables & Cosmic Obsidian Engine Styling -->
     <style>
+        @view-transition { navigation: auto; }
+
+        ::view-transition-old(root) {
+            animation: 180ms ease-out both citadel-fade-out;
+        }
+        ::view-transition-new(root) {
+            animation: 250ms ease-in both citadel-fade-in;
+        }
+
+        @keyframes citadel-fade-out {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.99); }
+        }
+        @keyframes citadel-fade-in {
+            from { opacity: 0; transform: scale(1.01); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
         :root {
             --color-obsidian-base: #05050A;
             --color-obsidian-surface: #0B0C16;
@@ -133,8 +151,10 @@
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
 
-    <!-- Bulletproof Storage Engine (SoulyDB) -->
+    <!-- Core Storage, Loader & UI Architecture Scripts -->
     <script src="{{ asset('js/souly-storage.js') }}"></script>
+    <script src="{{ asset('js/souly-loader.js') }}"></script>
+    <script src="{{ asset('js/souly-ui.js') }}"></script>
 
     <!-- Alpine.js 3.14 CDN (Deferred) -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
@@ -151,6 +171,8 @@
                 cairoTime: '',
                 sidebarCollapsed: false,
                 mobileNavOpen: false,
+                aiSheetOpen: false,
+                walletBalance: '{{ $citadelWalletBalance ?? "3500.00" }}',
 
                 init() {
                     const updateViewport = () => {
@@ -177,6 +199,11 @@
                             this.storageEngine = window.SoulyDB.getEngine();
                         });
                     }
+
+                    // Listen for AI Chat Sheet Trigger
+                    window.addEventListener('open-ai-chat-sheet', () => {
+                        this.aiSheetOpen = true;
+                    });
                 }
             });
         });
@@ -187,10 +214,19 @@
 <body class="min-h-screen bg-obsidian-base text-slate-100 antialiased selection:bg-cyber-cyan selection:text-obsidian-base cyber-grid-backdrop relative"
       x-data>
 
+    <!-- 25-Second Cinematic Story Loader with Ambient Audio -->
+    @include('partials.cinematic-loader')
+
+    <!-- Pre-cache payload for 0ms Icon Popups -->
+    <script id="souly-precache-data" type="application/json">{!! $citadelPrecacheJson ?? '{}' !!}</script>
+
     <!-- Unified Adaptive Shell Container -->
     <div id="citadel-root" class="min-h-screen flex flex-col justify-between">
         @yield('layout-body')
     </div>
+
+    <!-- Universal Interactive Icon Popup & Mobile Bottom-Sheet Engine -->
+    @include('partials.icon-popup')
 
     <!-- Telemetry Notification Beacon Slot -->
     <div id="citadel-toasts" class="fixed top-4 left-4 z-50 flex flex-col gap-2 pointer-events-none"></div>

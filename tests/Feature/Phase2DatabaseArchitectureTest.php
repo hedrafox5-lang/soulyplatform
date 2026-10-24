@@ -46,6 +46,7 @@ class Phase2DatabaseArchitectureTest extends TestCase
         $this->assertCount(1, $client->walletTransactions);
 
         // Test User::walletOrCreate() helper
+        User::where('email', 'auto.wallet@example.com')->delete();
         $newUser = User::create([
             'name' => 'Auto Wallet Test',
             'email' => 'auto.wallet@example.com',
@@ -56,6 +57,7 @@ class Phase2DatabaseArchitectureTest extends TestCase
         $this->assertInstanceOf(Wallet::class, $wallet);
         $this->assertEquals('0.00', $wallet->balance);
         $this->assertEquals($wallet->id, $newUser->walletOrCreate()->id);
+        $newUser->delete();
     }
 
     public function test_six_core_services_exist_with_proper_relations(): void
