@@ -269,7 +269,8 @@
             <div class="flex justify-center -mt-6">
                 <button id="mobile-souly-ai-orb"
                         type="button"
-                        class="w-14 h-14 rounded-full bg-gradient-to-tr from-cyber-purple via-obsidian-surface to-cyber-cyan p-[2.5px] shadow-neon-purple focus:outline-none transition-transform relative group">
+                        @click="$dispatch('open-souly-ai')"
+                        class="w-14 h-14 rounded-full bg-gradient-to-tr from-cyber-purple via-obsidian-surface to-cyber-cyan p-[2.5px] shadow-neon-purple focus:outline-none transition-transform relative group active:scale-90">
                     <div class="w-full h-full rounded-full bg-obsidian-base flex flex-col items-center justify-center">
                         <svg class="w-6 h-6 text-cyber-cyan animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />

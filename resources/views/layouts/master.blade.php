@@ -228,6 +228,9 @@
     <!-- Universal Interactive Icon Popup & Mobile Bottom-Sheet Engine -->
     @include('partials.icon-popup')
 
+    <!-- Souly AI Agent Interactive Widget (Desktop Floating & Mobile Dock) -->
+    @include('partials.souly-ai-widget')
+
     <!-- Telemetry Notification Beacon Slot -->
     <div id="citadel-toasts" class="fixed top-4 left-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 

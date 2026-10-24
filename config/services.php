@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+    'pinecone' => [
+        'api_key' => env('PINECONE_API_KEY'),
+        'host' => env('PINECONE_HOST'),
+        'index' => env('PINECONE_INDEX', 'souly-knowledge-v1'),
+    ],
+
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
+    ],
+
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+    ],
+
 ];
