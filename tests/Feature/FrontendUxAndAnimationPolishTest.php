@@ -107,4 +107,31 @@ class FrontendUxAndAnimationPolishTest extends TestCase
         $response->assertSee('أكاديمية سولي للتعليم التقني', false);
         $response->assertSee('الاستشارات وتطوير الأعمال', false);
     }
+
+    /**
+     * 6. Test that UltimatePOS is strictly forbidden and nowhere in rendered views or database,
+     * and that Arabic typography strictly enforces Cairo and Tahoma.
+     */
+    public function test_ultimatepos_is_forbidden_and_fonts_strictly_enforce_cairo_and_tahoma(): void
+    {
+        $response = $this->get('/');
+        $response->assertStatus(200);
+
+        // Assert UltimatePOS is nowhere in the page
+        $this->assertStringNotContainsStringIgnoringCase('UltimatePOS', $response->getContent());
+        $this->assertStringNotContainsStringIgnoringCase('Ultimate_POS', $response->getContent());
+
+        // Assert typography uses Cairo and Tahoma, and Readex Pro is removed from font imports
+        $response->assertSee('Cairo', false);
+        $response->assertSee('Tahoma', false);
+        $response->assertDontSee('Readex+Pro', false);
+
+        // Check BrandERP landing page
+        $erpResponse = $this->get('/services/brand-erp');
+        $erpResponse->assertStatus(200);
+        $this->assertStringNotContainsStringIgnoringCase('UltimatePOS', $erpResponse->getContent());
+
+        // Check official emblem artwork is embedded
+        $response->assertSee('souly-emblem-retina.png', false);
+    }
 }

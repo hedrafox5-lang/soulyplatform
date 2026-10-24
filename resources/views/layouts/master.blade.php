@@ -16,10 +16,10 @@
 
     <title>@yield('title', config('app.name', 'Souly Digital Citadel'))</title>
 
-    <!-- Google Fonts: Cairo & Readex Pro for Arabic Digital Typography -->
+    <!-- Google Fonts: Cairo & Tahoma for Arabic Digital Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Readex+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- Tailwind CSS Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -45,9 +45,10 @@
                         }
                     },
                     fontFamily: {
-                        sans: ['Readex Pro', 'Cairo', 'sans-serif'],
-                        cairo: ['Cairo', 'sans-serif'],
-                        readex: ['Readex Pro', 'sans-serif'],
+                        sans: ['Cairo', 'Tahoma', 'sans-serif'],
+                        cairo: ['Cairo', 'Tahoma', 'sans-serif'],
+                        tahoma: ['Tahoma', 'Cairo', 'sans-serif'],
+                        readex: ['Cairo', 'Tahoma', 'sans-serif'],
                         mono: ['JetBrains Mono', 'Fira Code', 'monospace']
                     },
                     boxShadow: {
@@ -87,13 +88,21 @@
             --color-cyber-cyan: #00F5D4;
             --color-cyber-gold: #FFB800;
             --color-cyber-purple: #7B2CBF;
-            --font-arabic: 'Cairo', 'Readex Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-arabic: 'Cairo', 'Tahoma', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            font-family: 'Cairo', 'Tahoma', sans-serif;
+        }
+
+        code, pre, kbd, .font-mono {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
         }
 
         body {
             background-color: var(--color-obsidian-base);
             color: #E2E8F0;
-            font-family: 'Readex Pro', 'Cairo', sans-serif;
+            font-family: 'Cairo', 'Tahoma', sans-serif;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
         }

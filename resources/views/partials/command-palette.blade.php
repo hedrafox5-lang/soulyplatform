@@ -98,7 +98,7 @@
             searchQuery: '',
             activeIndex: 0,
             items: [
-                { title: 'نظام BrandERP المتكامل', desc: 'نظام إدارة الموارد ونقاط البيع السحابي على نواة UltimatePOS SaaS', category: 'خدمة سحابية', tagClass: 'bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/40', icon: '⚡', url: '/services/brand-erp' },
+                { title: 'نظام BrandERP المتكامل', desc: 'نظام إدارة الموارد ونقاط البيع السحابي المتطور والمؤتمت للمؤسسات والشركات', category: 'خدمة سحابية', tagClass: 'bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/40', icon: '⚡', url: '/services/brand-erp' },
                 { title: 'موظفو ووكلاء الذكاء الاصطناعي (AI Agents)', desc: 'وكلاء رقميون أذكياء لخدمة العملاء وأتمتة العمليات 24/7', category: 'ذكاء اصطناعي', tagClass: 'bg-cyber-purple/20 text-cyber-purple border border-cyber-purple/40', icon: '🤖', url: '/services/ai-agents' },
                 { title: 'التدريع السيبراني والتحقيقات الجنائية', desc: 'تأمين الشبكات واختبار الاختراق والاستجابة للحوادث السيبرانية', category: 'أمن سيبراني', tagClass: 'bg-rose-500/15 text-rose-400 border border-rose-500/30', icon: '🛡️', url: '/services/cybersecurity' },
                 { title: 'الصيانة الهندسية للأجهزة والشبكات', desc: 'صيانة ميدانية في مقرك مع فحص هندسي وخصم 50% للزيارة الأولى', category: 'صيانة هندسية', tagClass: 'bg-cyber-gold/15 text-cyber-gold border border-cyber-gold/40', icon: '🔧', url: '/services/maintenance' },
