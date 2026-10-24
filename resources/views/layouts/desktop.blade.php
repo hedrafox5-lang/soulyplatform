@@ -223,11 +223,13 @@
     <!-- Wide Command Center Status Ribbon (Footer) -->
     <footer class="w-full glass-obsidian border-t border-obsidian-border/80 px-6 py-2.5 text-xs text-slate-400">
         <div class="max-w-[1920px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 font-mono">
-            <div class="flex items-center gap-4">
-                <span class="flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-cyber-cyan"></span>
-                    <span>SOULY DIGITAL CITADEL &copy; {{ date('Y') }}</span>
-                </span>
+            <div class="flex items-center gap-3">
+                <a href="{{ url('/') }}" class="inline-flex items-center gap-2 group">
+                    <x-souly-logo size="xs" :showText="false" />
+                    <span class="text-slate-200 font-extrabold font-cairo text-xs">سولي سيتادل</span>
+                </a>
+                <span class="text-obsidian-border">|</span>
+                <span class="text-slate-400">&copy; {{ date('Y') }} SOULYEG.ONLINE</span>
                 <span class="hidden md:inline text-obsidian-border">|</span>
                 <span class="hidden md:inline text-slate-400">إصدار الهيكل: Laravel 13.38 Native (Blade + Alpine + GSAP)</span>
             </div>

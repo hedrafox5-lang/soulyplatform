@@ -77,8 +77,8 @@
              class="fixed inset-y-0 right-0 max-w-xs w-full glass-obsidian border-l border-obsidian-border p-6 flex flex-col justify-between safe-top safe-bottom">
             <div class="space-y-6">
                 <div class="flex items-center justify-between pb-4 border-b border-obsidian-border">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-cyber-cyan animate-pulse"></span>
+                    <div class="flex items-center gap-2.5">
+                        <x-souly-logo size="xs" :showText="false" />
                         <span class="font-extrabold text-base text-slate-100 font-cairo">بوابة التحكم والخدمات</span>
                     </div>
                     <button @click="$store.citadel.mobileNavOpen = false" class="p-1.5 rounded-lg text-slate-400 hover:text-white">
