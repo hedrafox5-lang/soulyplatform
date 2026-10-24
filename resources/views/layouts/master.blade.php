@@ -177,9 +177,17 @@
                 storageEngine: 'initializing...',
                 nodePing: '12ms',
                 cairoTime: '',
-                sidebarCollapsed: false,
+                sidebarCollapsed: localStorage.getItem('citadel_sidebar_collapsed') === 'true',
                 mobileNavOpen: false,
                 aiSheetOpen: false,
+                contextMenuOpen: false,
+                contextMenuX: 0,
+                contextMenuY: 0,
+                commandPaletteOpen: false,
+                notificationCenterOpen: false,
+                toastMessage: '',
+                toastVisible: false,
+                toastTimeout: null,
                 walletBalance: '{{ $citadelWalletBalance ?? "3500.00" }}',
                 
                 // Native Installable Mobile PWA Engine
@@ -188,6 +196,29 @@
                 isIos: false,
                 showIosInstallModal: false,
                 appInstalled: false,
+
+                toggleSidebar() {
+                    this.sidebarCollapsed = !this.sidebarCollapsed;
+                    localStorage.setItem('citadel_sidebar_collapsed', this.sidebarCollapsed);
+                    if (window.SoulyLoadingBar) window.SoulyLoadingBar.pulse(150);
+                },
+
+                showToast(msg, duration = 3000) {
+                    this.toastMessage = msg;
+                    this.toastVisible = true;
+                    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+                    this.toastTimeout = setTimeout(() => {
+                        this.toastVisible = false;
+                    }, duration);
+                },
+
+                copyCurrentUrl() {
+                    navigator.clipboard.writeText(window.location.href).then(() => {
+                        this.showToast('تم نسخ رابط الصفحة السيادية إلى الحافظة بنجاح ✓');
+                    }).catch(() => {
+                        this.showToast('تم تحديد الرابط للنسخ');
+                    });
+                },
 
                 async installApp() {
                     if (this.deferredPrompt) {
@@ -209,8 +240,55 @@
                 init() {
                     const updateViewport = () => {
                         this.isMobile = window.innerWidth < 1024;
+                        if (window.innerWidth < 1280 && !this.sidebarCollapsed) {
+                            this.sidebarCollapsed = true;
+                        }
                     };
                     window.addEventListener('resize', updateViewport);
+                    updateViewport();
+
+                    // Smart Cyber Right-Click Context Menu Listener
+                    window.addEventListener('contextmenu', (e) => {
+                        // Allow native menu if Shift key is held
+                        if (e.shiftKey) return;
+                        e.preventDefault();
+
+                        // Constrain coordinates within viewport
+                        const menuWidth = 265;
+                        const menuHeight = 390;
+                        const x = Math.min(e.clientX, window.innerWidth - menuWidth - 10);
+                        const y = Math.min(e.clientY, window.innerHeight - menuHeight - 10);
+
+                        this.contextMenuX = Math.max(10, x);
+                        this.contextMenuY = Math.max(10, y);
+                        this.contextMenuOpen = true;
+
+                        if (window.SoulyLoadingBar) window.SoulyLoadingBar.pulse(120);
+                    });
+
+                    // Auto-close context menu on click or scroll
+                    window.addEventListener('click', () => {
+                        if (this.contextMenuOpen) this.contextMenuOpen = false;
+                    });
+                    window.addEventListener('scroll', () => {
+                        if (this.contextMenuOpen) this.contextMenuOpen = false;
+                    }, { passive: true });
+
+                    // Global Command Palette [Ctrl+K] & [Escape] Auto-Close
+                    window.addEventListener('keydown', (e) => {
+                        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                            e.preventDefault();
+                            this.commandPaletteOpen = !this.commandPaletteOpen;
+                            if (window.SoulyLoadingBar) window.SoulyLoadingBar.pulse(160);
+                        }
+                        if (e.key === 'Escape') {
+                            this.contextMenuOpen = false;
+                            this.commandPaletteOpen = false;
+                            this.notificationCenterOpen = false;
+                            this.mobileNavOpen = false;
+                            this.showIosInstallModal = false;
+                        }
+                    });
 
                     // Update Cairo Local Time (Africa/Cairo)
                     const tickClock = () => {
@@ -292,6 +370,29 @@
 
     <!-- Souly AI Agent Interactive Widget (Desktop Floating & Mobile Dock) -->
     @include('partials.souly-ai-widget')
+
+    <!-- Smart Role-Aware Cyber Context Menu -->
+    @include('partials.context-menu')
+
+    <!-- Omni-Search Command Palette [Ctrl + K] -->
+    @include('partials.command-palette')
+
+    <!-- Glassmorphic Notification Center Sheet -->
+    @include('partials.notification-center')
+
+    <!-- Global Reactive Cyber Toast Pill -->
+    <div x-show="$store.citadel.toastVisible" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 -translate-y-3"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 -translate-y-3"
+         class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[999999] px-4 py-2.5 rounded-2xl glass-obsidian border border-cyber-cyan/50 text-white font-cairo text-xs font-bold shadow-neon-cyan flex items-center gap-2 pointer-events-none"
+         style="display: none;">
+        <span class="w-2 h-2 rounded-full bg-cyber-cyan animate-ping"></span>
+        <span x-text="$store.citadel.toastMessage"></span>
+    </div>
 
     <!-- iOS / PWA Installation Guidance Modal -->
     <div x-show="$store.citadel.showIosInstallModal" 

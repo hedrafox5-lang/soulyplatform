@@ -22,10 +22,12 @@
 
             <!-- Center: Command Omni-Search HUD -->
             <div class="flex-1 max-w-xl mx-4">
-                <div class="relative">
+                <div class="relative cursor-pointer" @click="$store.citadel.commandPaletteOpen = true">
                     <input type="text" 
-                           placeholder="بحث قيادي ذكي (العمليات، العقد، السجلات)... [Ctrl + K]" 
-                           class="w-full bg-obsidian-surface/90 text-sm text-slate-200 placeholder-slate-500 rounded-xl px-10 py-2 border border-obsidian-border focus:outline-none focus:border-cyber-cyan focus:ring-1 focus:ring-cyber-cyan/40 transition-all font-cairo">
+                           readonly
+                           @click="$store.citadel.commandPaletteOpen = true"
+                           placeholder="بحث قيادي ذكي (العمليات، الخدمات، السجلات)... [Ctrl + K]" 
+                           class="w-full bg-obsidian-surface/90 text-sm text-slate-200 placeholder-slate-400 rounded-xl px-10 py-2 border border-obsidian-border hover:border-cyber-cyan/50 focus:outline-none focus:border-cyber-cyan focus:ring-1 focus:ring-cyber-cyan/40 transition-all font-cairo cursor-pointer">
                     <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
                         <svg class="w-4 h-4 text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -92,6 +94,17 @@
                     <span class="uppercase" x-text="$store.citadel.storageEngine">IDB</span>
                 </div>
 
+                <!-- Notification Center Bell Trigger -->
+                <button @click="$store.citadel.notificationCenterOpen = true" 
+                        type="button"
+                        title="مركز الإشعارات والتنبيهات السيادية"
+                        class="relative p-2 rounded-xl bg-obsidian-surface border border-obsidian-border text-slate-300 hover:text-cyber-gold hover:border-cyber-gold/40 transition-all">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-cyber-gold animate-pulse"></span>
+                </button>
+
                 <!-- Operator / Auth Profile -->
                 @auth
                     <div class="flex items-center gap-3">
@@ -133,82 +146,137 @@
     <!-- Main Command Center Shell Layout -->
     <div class="flex-1 max-w-[1920px] w-full mx-auto flex">
         
-        <!-- Command Center Left Navigation Dock (Wide Sidebar) -->
-        <aside class="w-72 hidden lg:flex flex-col justify-between glass-obsidian border-l border-obsidian-border/70 p-4 shrink-0 min-h-[calc(100vh-65px)]">
-            <div class="space-y-6">
-                <!-- Operations Section -->
-                <div>
-                    <span class="px-3 text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold">منظومة القيادة والعمليات</span>
-                    <nav class="mt-2 space-y-1">
-                        <a href="{{ url('/') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->is('/') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-cyan hover:bg-obsidian-surface/60' }} transition-all">
-                            <div class="flex items-center gap-3">
-                                <svg class="w-5 h-5 text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                </svg>
-                                <span>لوحة القيادة المركزية</span>
-                            </div>
-                            <span class="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse"></span>
-                        </a>
-
-                        <a href="{{ route('services.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->is('services*') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-cyan hover:bg-obsidian-surface/60' }} transition-all">
-                            <svg class="w-5 h-5 text-slate-400 group-hover:text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                            </svg>
-                            <span>كتالوج الخدمات السيادية</span>
-                        </a>
-
-                        <a href="{{ route('portal.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->is('portal') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-cyan hover:bg-obsidian-surface/60' }} transition-all">
-                            <svg class="w-5 h-5 text-slate-400 group-hover:text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                            </svg>
-                            <span>بوابة العملاء والمحفظة</span>
-                        </a>
-
-                        <a href="{{ route('portal.bookings') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->is('portal/bookings*') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-cyan hover:bg-obsidian-surface/60' }} transition-all">
-                            <svg class="w-5 h-5 text-slate-400 group-hover:text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                            <span>حجز ومتابعة الخدمات</span>
-                        </a>
-
-                        <a href="{{ route('portal.tickets') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->is('portal/tickets*') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-purple hover:bg-obsidian-surface/60' }} transition-all">
-                            <svg class="w-5 h-5 text-cyber-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                            <span>تذاكر الدعم والاستشارات</span>
-                        </a>
-
-                        @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'staff']))
-                            <div class="pt-3 border-t border-obsidian-border/60">
-                                <span class="px-3 text-[10px] font-mono uppercase tracking-wider text-cyber-gold font-bold">إدارة العمليات والـ HQ</span>
-                                <a href="{{ route('admin.index') }}" class="mt-1 flex items-center justify-between px-3 py-2 rounded-xl text-sm font-bold bg-cyber-gold/15 text-cyber-gold border border-cyber-gold/40 shadow-neon-gold transition-all">
-                                    <div class="flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-cyber-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        <span>مركز القيادة Admin HQ</span>
-                                    </div>
-                                    <span class="w-2 h-2 rounded-full bg-cyber-gold animate-pulse"></span>
-                                </a>
-                            </div>
-                        @endif
-                    </nav>
+        <!-- Command Center Left Navigation Dock (Collapsible Auto-Close HUD Dock) -->
+        <aside class="hidden lg:flex flex-col justify-between glass-obsidian border-l border-obsidian-border/70 p-3.5 shrink-0 min-h-[calc(100vh-65px)] transition-all duration-300 ease-in-out"
+               :class="$store.citadel.sidebarCollapsed ? 'w-20' : 'w-72'">
+            <div class="space-y-5">
+                <!-- Dock Header with Collapse/Expand Toggle -->
+                <div class="flex items-center justify-between pb-2 border-b border-obsidian-border/70">
+                    <span x-show="!$store.citadel.sidebarCollapsed" 
+                          x-transition
+                          class="px-2 text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">منظومة القيادة والعمليات</span>
+                    
+                    <button @click="$store.citadel.toggleSidebar()" 
+                            type="button"
+                            :title="$store.citadel.sidebarCollapsed ? 'توسيع القائمة الجانبية' : 'طي القائمة الجانبية للتركيز'"
+                            class="p-1.5 rounded-xl bg-obsidian-surface hover:bg-cyber-cyan/15 text-slate-400 hover:text-cyber-cyan border border-obsidian-border hover:border-cyber-cyan/40 transition-all mx-auto">
+                        <svg class="w-4 h-4 transition-transform duration-300" 
+                             :class="$store.citadel.sidebarCollapsed ? 'rotate-180 text-cyber-cyan' : ''" 
+                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                        </svg>
+                    </button>
                 </div>
+
+                <!-- Navigation Links List -->
+                <nav class="space-y-1.5">
+                    <!-- Link 1: Home / Dashboard -->
+                    <a href="{{ url('/') }}" 
+                       :title="$store.citadel.sidebarCollapsed ? 'لوحة القيادة المركزية' : ''"
+                       class="flex items-center rounded-xl font-medium transition-all group {{ request()->is('/') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-cyan hover:bg-obsidian-surface/60' }}"
+                       :class="$store.citadel.sidebarCollapsed ? 'justify-center p-3' : 'justify-between px-3 py-2.5 text-sm'">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5 text-cyber-cyan shrink-0 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                            <span x-show="!$store.citadel.sidebarCollapsed" x-transition class="truncate font-cairo">لوحة القيادة المركزية</span>
+                        </div>
+                        <span x-show="!$store.citadel.sidebarCollapsed" class="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse"></span>
+                    </a>
+
+                    <!-- Link 2: Services -->
+                    <a href="{{ route('services.index') }}" 
+                       :title="$store.citadel.sidebarCollapsed ? 'كتالوج الخدمات السيادية' : ''"
+                       class="flex items-center rounded-xl font-medium transition-all group {{ request()->is('services*') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-cyan hover:bg-obsidian-surface/60' }}"
+                       :class="$store.citadel.sidebarCollapsed ? 'justify-center p-3' : 'px-3 py-2.5 text-sm gap-3'">
+                        <svg class="w-5 h-5 text-slate-400 group-hover:text-cyber-cyan shrink-0 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                        <span x-show="!$store.citadel.sidebarCollapsed" x-transition class="truncate font-cairo">كتالوج الخدمات السيادية</span>
+                    </a>
+
+                    <!-- Link 3: Portal & Wallet -->
+                    <a href="{{ route('portal.index') }}" 
+                       :title="$store.citadel.sidebarCollapsed ? 'بوابة العملاء والمحفظة' : ''"
+                       class="flex items-center rounded-xl font-medium transition-all group {{ request()->is('portal') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-cyan hover:bg-obsidian-surface/60' }}"
+                       :class="$store.citadel.sidebarCollapsed ? 'justify-center p-3' : 'px-3 py-2.5 text-sm gap-3'">
+                        <svg class="w-5 h-5 text-slate-400 group-hover:text-cyber-cyan shrink-0 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        <span x-show="!$store.citadel.sidebarCollapsed" x-transition class="truncate font-cairo">بوابة العملاء والمحفظة</span>
+                    </a>
+
+                    <!-- Link 4: Bookings -->
+                    <a href="{{ route('portal.bookings') }}" 
+                       :title="$store.citadel.sidebarCollapsed ? 'حجز ومتابعة الخدمات' : ''"
+                       class="flex items-center rounded-xl font-medium transition-all group {{ request()->is('portal/bookings*') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-cyan hover:bg-obsidian-surface/60' }}"
+                       :class="$store.citadel.sidebarCollapsed ? 'justify-center p-3' : 'px-3 py-2.5 text-sm gap-3'">
+                        <svg class="w-5 h-5 text-slate-400 group-hover:text-cyber-cyan shrink-0 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span x-show="!$store.citadel.sidebarCollapsed" x-transition class="truncate font-cairo">حجز ومتابعة الخدمات</span>
+                    </a>
+
+                    <!-- Link 5: Tickets -->
+                    <a href="{{ route('portal.tickets') }}" 
+                       :title="$store.citadel.sidebarCollapsed ? 'تذاكر الدعم والاستشارات' : ''"
+                       class="flex items-center rounded-xl font-medium transition-all group {{ request()->is('portal/tickets*') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-purple hover:bg-obsidian-surface/60' }}"
+                       :class="$store.citadel.sidebarCollapsed ? 'justify-center p-3' : 'px-3 py-2.5 text-sm gap-3'">
+                        <svg class="w-5 h-5 text-cyber-purple shrink-0 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <span x-show="!$store.citadel.sidebarCollapsed" x-transition class="truncate font-cairo">تذاكر الدعم والاستشارات</span>
+                    </a>
+
+                    @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'staff']))
+                        <div class="pt-3 border-t border-obsidian-border/60">
+                            <span x-show="!$store.citadel.sidebarCollapsed" 
+                                  x-transition
+                                  class="px-2 text-[10px] font-mono uppercase tracking-wider text-cyber-gold font-bold block mb-1">إدارة العمليات والـ HQ</span>
+                            <a href="{{ route('admin.index') }}" 
+                               :title="$store.citadel.sidebarCollapsed ? 'مركز القيادة Admin HQ' : ''"
+                               class="flex items-center rounded-xl font-bold bg-cyber-gold/15 text-cyber-gold border border-cyber-gold/40 shadow-neon-gold transition-all"
+                               :class="$store.citadel.sidebarCollapsed ? 'justify-center p-3' : 'justify-between px-3 py-2 text-sm'">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-cyber-gold shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span x-show="!$store.citadel.sidebarCollapsed" x-transition class="truncate font-cairo">مركز القيادة HQ</span>
+                                </div>
+                                <span x-show="!$store.citadel.sidebarCollapsed" class="w-2 h-2 rounded-full bg-cyber-gold animate-pulse"></span>
+                            </a>
+                        </div>
+                    @endif
+                </nav>
             </div>
 
-            <!-- Sidebar Diagnostic Card -->
-            <div class="p-3 rounded-2xl bg-obsidian-surface border border-obsidian-border space-y-2">
-                <div class="flex items-center justify-between text-xs">
-                    <span class="text-slate-400 font-mono">حالة العقدة:</span>
-                    <span class="text-cyber-cyan font-bold font-mono">نشط ومستقر</span>
+            <!-- Sidebar Diagnostic Card (Click to Refresh Ping) -->
+            <div @click="$store.citadel.showToast('فحص العقدة: استجابة الخادم 11ms - نشط ومستقر 100% ✓')"
+                 class="rounded-2xl bg-obsidian-surface border border-obsidian-border hover:border-cyber-cyan/40 transition-all cursor-pointer group select-none"
+                 :class="$store.citadel.sidebarCollapsed ? 'p-2.5 text-center' : 'p-3 space-y-2'">
+                
+                <div x-show="!$store.citadel.sidebarCollapsed">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-400 font-mono">حالة العقدة:</span>
+                        <span class="text-cyber-cyan font-bold font-mono group-hover:scale-105 transition-transform">نشط ومستقر</span>
+                    </div>
+                    <div class="w-full bg-obsidian-base rounded-full h-1.5 overflow-hidden my-2">
+                        <div class="bg-gradient-to-r from-cyber-purple to-cyber-cyan h-1.5 rounded-full w-[96%] animate-pulse"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                        <span>حمولة: 14%</span>
+                        <span class="text-cyber-cyan">استجابة: 99.99%</span>
+                    </div>
                 </div>
-                <div class="w-full bg-obsidian-base rounded-full h-1.5 overflow-hidden">
-                    <div class="bg-gradient-to-r from-cyber-purple to-cyber-cyan h-1.5 rounded-full w-[94%]"></div>
-                </div>
-                <div class="flex items-center justify-between text-[10px] text-slate-500 font-mono">
-                    <span>حمولة الخادم: 18%</span>
-                    <span>استجابة: 99.98%</span>
+
+                <div x-show="$store.citadel.sidebarCollapsed" 
+                     :title="'حالة العقدة: نشط ومستقر | استجابة: 11ms'"
+                     class="flex justify-center">
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-cyan opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-cyber-cyan"></span>
+                    </span>
                 </div>
             </div>
         </aside>

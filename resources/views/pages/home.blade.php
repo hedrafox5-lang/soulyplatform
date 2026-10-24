@@ -283,12 +283,12 @@
                                         data-cta-text="{{ $icon->popup_cta_text }}"
                                         class="p-3.5 rounded-2xl bg-obsidian-surface hover:bg-obsidian-card border border-obsidian-border hover:border-cyber-cyan/50 text-right space-y-2 group active:scale-95 transition-all">
                                     <div class="flex items-center justify-between">
-                                        <div class="w-8 h-8 rounded-xl bg-obsidian-base border border-obsidian-border flex items-center justify-center text-cyber-cyan group-hover:scale-110 transition-transform">
+                                        <div class="w-8 h-8 rounded-xl bg-obsidian-surface border border-cyber-cyan/30 flex items-center justify-center text-cyber-cyan group-hover:scale-110 transition-transform shadow-[0_0_10px_rgba(0,245,212,0.15)]">
                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                             </svg>
                                         </div>
-                                        <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-obsidian-base text-slate-400 group-hover:text-cyber-cyan transition-colors">
+                                        <span class="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/30 shadow-[0_0_8px_rgba(0,245,212,0.15)] group-hover:bg-cyber-cyan/25 group-hover:border-cyber-cyan group-hover:shadow-neon-cyan transition-all">
                                             {{ $icon->badge_text ?? 'جاهز' }}
                                         </span>
                                     </div>
@@ -330,7 +330,7 @@
                                         class="p-4 rounded-2xl bg-obsidian-surface hover:bg-obsidian-card border border-obsidian-border hover:border-cyber-gold/50 text-right space-y-2 group active:scale-95 transition-all flex flex-col justify-between">
                                     <div class="space-y-2">
                                         <div class="flex items-center justify-between">
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-obsidian-base text-cyber-gold border border-cyber-gold/30">
+                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyber-gold/15 text-cyber-gold border border-cyber-gold/40 shadow-[0_0_8px_rgba(255,184,0,0.2)]">
                                                 {{ $feat->badge_text ?? 'ميزة تقنية' }}
                                             </span>
                                             <svg class="w-4 h-4 text-slate-500 group-hover:text-cyber-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -385,7 +385,7 @@
                                 <!-- Package Header -->
                                 <div class="space-y-2">
                                     <div class="flex items-center justify-between">
-                                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-obsidian-base text-slate-400 border border-obsidian-border">
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-obsidian-surface text-slate-300 border border-obsidian-border/80">
                                             {{ $pkg->billing_type }}
                                         </span>
                                         @if($pkg->warranty_days)
@@ -404,7 +404,7 @@
                                 </div>
 
                                 <!-- Pricing Block -->
-                                <div class="p-4 rounded-2xl bg-obsidian-base/80 border border-obsidian-border/80 space-y-1">
+                                <div class="p-4 rounded-2xl bg-obsidian-surface/90 border border-obsidian-border space-y-1">
                                     @if($pkg->original_price && $pkg->original_price > $pkg->price)
                                         <div class="flex items-center gap-2">
                                             <span class="text-xs font-mono text-slate-500 line-through">{{ number_format($pkg->original_price, 0) }} EGP</span>
