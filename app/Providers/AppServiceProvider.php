@@ -50,8 +50,9 @@ class AppServiceProvider extends ServiceProvider
 
             // Quick Wallet Balance Pill (Auth user or demo account preview)
             $walletBalance = '3500.00';
-            if (auth()->check() && auth()->user()->wallet) {
-                $walletBalance = number_format(auth()->user()->wallet->balance, 2);
+            if (auth()->check()) {
+                $wallet = auth()->user()->wallet ?? auth()->user()->walletOrCreate();
+                $walletBalance = number_format($wallet->balance, 2, '.', '');
             }
             $view->with('citadelWalletBalance', $walletBalance);
         });

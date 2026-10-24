@@ -94,14 +94,39 @@
                     <span class="uppercase" x-text="$store.citadel.storageEngine">IDB</span>
                 </div>
 
-                <!-- Operator Node Profile -->
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-cyber-purple to-cyber-cyan p-[1px]">
-                        <div class="w-full h-full bg-obsidian-surface rounded-lg flex items-center justify-center font-bold text-xs text-cyber-cyan">
-                            SC
-                        </div>
+                <!-- Operator / Auth Profile -->
+                @auth
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('portal.index') }}" class="flex items-center gap-2 group">
+                            <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-cyber-purple to-cyber-cyan p-[1px]">
+                                <div class="w-full h-full bg-obsidian-surface rounded-lg flex items-center justify-center font-bold text-xs text-cyber-cyan">
+                                    {{ mb_substr(auth()->user()->name, 0, 2) }}
+                                </div>
+                            </div>
+                            <div class="hidden xl:block text-right">
+                                <div class="text-xs font-bold text-white font-cairo leading-none">{{ auth()->user()->name }}</div>
+                                <div class="text-[10px] font-mono text-cyber-cyan mt-0.5 uppercase">{{ auth()->user()->role }}</div>
+                            </div>
+                        </a>
+                        <form action="{{ route('logout') }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" title="تسجيل الخروج" class="p-2 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-obsidian-surface transition-colors">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                            </button>
+                        </form>
                     </div>
-                </div>
+                @else
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('login') }}" class="px-3.5 py-1.5 rounded-xl bg-obsidian-surface border border-obsidian-border text-xs font-cairo text-slate-200 hover:text-cyber-cyan hover:border-cyber-cyan transition-all">
+                            دخول
+                        </a>
+                        <a href="{{ route('register') }}" class="px-3.5 py-1.5 rounded-xl bg-cyber-cyan text-obsidian-base font-bold text-xs font-cairo shadow-neon-cyan hover:scale-105 active:scale-95 transition-all">
+                            تسجيل
+                        </a>
+                    </div>
+                @endauth
             </div>
 
         </div>
@@ -117,7 +142,7 @@
                 <div>
                     <span class="px-3 text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold">منظومة القيادة والعمليات</span>
                     <nav class="mt-2 space-y-1">
-                        <a href="{{ url('/') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30 transition-all">
+                        <a href="{{ url('/') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->is('/') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-cyan hover:bg-obsidian-surface/60' }} transition-all">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5 text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -127,53 +152,32 @@
                             <span class="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse"></span>
                         </a>
 
-                        <a href="#operations" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-cyber-cyan hover:bg-obsidian-surface/60 transition-all">
+                        <a href="{{ route('services.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->is('services*') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-cyan hover:bg-obsidian-surface/60' }} transition-all">
                             <svg class="w-5 h-5 text-slate-400 group-hover:text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                             </svg>
-                            <span>غرفة العمليات الحية</span>
+                            <span>كتالوج الخدمات السيادية</span>
                         </a>
 
-                        <a href="#inventory" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-cyber-cyan hover:bg-obsidian-surface/60 transition-all">
+                        <a href="{{ route('portal.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->is('portal') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-cyan hover:bg-obsidian-surface/60' }} transition-all">
                             <svg class="w-5 h-5 text-slate-400 group-hover:text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                             </svg>
-                            <span>خزينة المخزون والمنتجات</span>
+                            <span>بوابة العملاء والمحفظة</span>
                         </a>
 
-                        <a href="#nodes" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-cyber-cyan hover:bg-obsidian-surface/60 transition-all">
+                        <a href="{{ route('portal.bookings') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->is('portal/bookings*') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-cyan hover:bg-obsidian-surface/60' }} transition-all">
                             <svg class="w-5 h-5 text-slate-400 group-hover:text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                             </svg>
-                            <span>عقد سيتادل الرقمية</span>
-                        </a>
-                    </nav>
-                </div>
-
-                <!-- Citadel Telemetry & Security Section -->
-                <div>
-                    <span class="px-3 text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold">الحماية والاستخبارات الرقمية</span>
-                    <nav class="mt-2 space-y-1">
-                        <a href="#telemetry" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-cyber-gold hover:bg-obsidian-surface/60 transition-all">
-                            <svg class="w-5 h-5 text-cyber-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                            <span>مصفوفة التيليميتري المتقدمة</span>
+                            <span>حجز ومتابعة الخدمات</span>
                         </a>
 
-                        <a href="#security" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-cyber-purple hover:bg-obsidian-surface/60 transition-all">
+                        <a href="{{ route('portal.tickets') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->is('portal/tickets*') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-purple hover:bg-obsidian-surface/60' }} transition-all">
                             <svg class="w-5 h-5 text-cyber-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
                             </svg>
-                            <span>جدار الحماية والتشفير</span>
-                        </a>
-
-                        <a href="#settings" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-slate-100 hover:bg-obsidian-surface/60 transition-all">
-                            <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <span>الإعدادات وتكوين النظام</span>
+                            <span>تذاكر الدعم والاستشارات</span>
                         </a>
                     </nav>
                 </div>

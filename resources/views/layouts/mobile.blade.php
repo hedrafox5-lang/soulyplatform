@@ -92,33 +92,72 @@
                     </button>
                 </div>
 
-                <nav class="space-y-2">
-                    <a href="{{ url('/') }}" @click="$store.citadel.mobileNavOpen = false" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30 text-sm font-medium">
-                        <svg class="w-5 h-5 text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <nav class="space-y-1.5">
+                    <a href="{{ url('/') }}" @click="$store.citadel.mobileNavOpen = false" class="flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->is('/') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-white' }} text-xs font-bold font-cairo">
+                        <svg class="w-4 h-4 text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                         </svg>
                         <span>الرئيسية</span>
                     </a>
-                    <a href="{{ url('/#services') }}" @click="$store.citadel.mobileNavOpen = false" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-cyber-cyan text-sm font-medium">
-                        <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <a href="{{ route('services.index') }}" @click="$store.citadel.mobileNavOpen = false" class="flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->is('services*') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-white' }} text-xs font-bold font-cairo">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                         </svg>
                         <span>كتالوج الخدمات الست</span>
                     </a>
-                    <a href="{{ url('/portal') }}" @click="$store.citadel.mobileNavOpen = false" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-cyber-gold text-sm font-medium">
-                        <svg class="w-5 h-5 text-cyber-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <a href="{{ route('portal.index') }}" @click="$store.citadel.mobileNavOpen = false" class="flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->is('portal') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-gold' }} text-xs font-bold font-cairo">
+                        <svg class="w-4 h-4 text-cyber-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                         </svg>
-                        <span>محفظتي وطلباتي</span>
+                        <span>لوحة التحكم والمحفظة</span>
                     </a>
-                    <button type="button" @click="$store.citadel.mobileNavOpen = false; SoulyLoader.replay();" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-cyber-cyan text-sm font-medium text-right">
-                        <svg class="w-5 h-5 text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <a href="{{ route('portal.bookings') }}" @click="$store.citadel.mobileNavOpen = false" class="flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->is('portal/bookings*') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-white' }} text-xs font-bold font-cairo">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span>حجز ومتابعة الخدمات</span>
+                    </a>
+                    <a href="{{ route('portal.tickets') }}" @click="$store.citadel.mobileNavOpen = false" class="flex items-center gap-3 px-3 py-2 rounded-xl {{ request()->is('portal/tickets*') ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' : 'text-slate-300 hover:text-cyber-purple' }} text-xs font-bold font-cairo">
+                        <svg class="w-4 h-4 text-cyber-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <span>تذاكر الدعم الهندسي</span>
+                    </a>
+                    <button type="button" @click="$store.citadel.mobileNavOpen = false; SoulyLoader.replay();" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-300 hover:text-cyber-cyan text-xs font-bold font-cairo text-right">
+                        <svg class="w-4 h-4 text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span>إعادة العرض السينمائي (25s)</span>
                     </button>
                 </nav>
+
+                <!-- Auth / Profile Box in Drawer -->
+                <div class="pt-4 border-t border-obsidian-border/80">
+                    @auth
+                        <div class="p-3 rounded-2xl bg-obsidian-surface border border-obsidian-border space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-xs text-white font-cairo">{{ auth()->user()->name }}</span>
+                                <span class="text-[10px] font-mono text-cyber-cyan uppercase">{{ auth()->user()->role }}</span>
+                            </div>
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="w-full py-2 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 font-bold text-xs font-cairo transition-colors text-center">
+                                    تسجيل الخروج
+                                </button>
+                            </form>
+                        </div>
+                    @else
+                        <div class="grid grid-cols-2 gap-2">
+                            <a href="{{ route('login') }}" class="py-2.5 rounded-xl bg-obsidian-surface border border-obsidian-border text-center text-xs font-cairo font-bold text-white hover:border-cyber-cyan">
+                                دخول
+                            </a>
+                            <a href="{{ route('register') }}" class="py-2.5 rounded-xl bg-cyber-cyan text-obsidian-base text-center text-xs font-cairo font-black shadow-neon-cyan">
+                                حساب جديد
+                            </a>
+                        </div>
+                    @endauth
+                </div>
             </div>
 
             <!-- Drawer Bottom Diagnostics -->
