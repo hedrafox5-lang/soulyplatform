@@ -1,0 +1,94 @@
+{
+  "name": "قلعة سولي الرقمية | Souly Digital Citadel",
+  "short_name": "سولي",
+  "description": "المنصة التكنولوجية والسيادية المتكاملة: أنظمة BrandERP، وكلاء الذكاء الاصطناعي، التدريع السيبراني، والصيانة الهندسية",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#05050A",
+  "theme_color": "#00F5D4",
+  "orientation": "portrait-primary",
+  "categories": [
+    "business",
+    "productivity",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "كتالوج الخدمات السيادية",
+      "short_name": "الخدمات",
+      "description": "تصفح كافة القطاعات والحلول الهندسية",
+      "url": "/services",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "محفظة سولي الرقمية",
+      "short_name": "المحفظة",
+      "description": "إدارة الرصيد والتحويلات والشحن الفوري",
+      "url": "/portal/wallet",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "المساعد الذكي سولي AI",
+      "short_name": "سولي AI",
+      "description": "استشارات ذكية فورية وحجز سريع",
+      "url": "/?open_ai=1",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "بوابة العميل",
+      "short_name": "البوابة",
+      "description": "متابعة الحجوزات والتذاكر الهندسية",
+      "url": "/portal",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

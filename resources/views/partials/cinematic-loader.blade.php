@@ -13,19 +13,9 @@
     <!-- Top Status Ribbon & Audio Synthesizer Controls -->
     <header class="relative z-10 flex items-center justify-between gap-4">
         <!-- Citadel Shield Brand -->
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyber-purple via-obsidian-surface to-cyber-cyan p-[1.5px] shadow-neon-cyan">
-                <div class="w-full h-full bg-obsidian-surface rounded-xl flex items-center justify-center">
-                    <svg class="w-5 h-5 text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                </div>
-            </div>
-            <div>
-                <span class="font-extrabold text-base tracking-wide font-cairo text-white block">سولي ديدجيتال سيتادل</span>
-                <span class="text-[10px] font-mono text-cyber-cyan tracking-wider">SOULYEG.ONLINE // INITIALIZING CORE</span>
-            </div>
-        </div>
+        <a href="{{ url('/') }}" class="flex items-center gap-3">
+            <x-souly-logo size="xs" :showText="true" />
+        </a>
 
         <!-- Ambient Sci-Fi Audio Synthesizer Button -->
         <button id="loader-sound-toggle" 
@@ -42,16 +32,9 @@
     <!-- Center Cinematic Stage: Chapters & Dynamic Story Narration -->
     <main class="relative z-10 max-w-4xl mx-auto w-full my-auto text-center space-y-6">
         
-        <!-- Glowing Core Orb / Hologram -->
-        <div class="relative mx-auto w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
-            <!-- Pulsing outer ring -->
-            <div class="absolute inset-0 rounded-full border border-cyber-cyan/30 animate-spin" style="animation-duration: 12s;"></div>
-            <div class="absolute inset-2 rounded-full border border-cyber-purple/40 animate-spin" style="animation-duration: 8s; animation-direction: reverse;"></div>
-            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-cyber-purple/30 via-obsidian-surface to-cyber-cyan/20 border border-cyber-cyan/50 backdrop-blur-md flex items-center justify-center shadow-neon-cyan">
-                <svg class="w-8 h-8 text-cyber-cyan animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-            </div>
+        <!-- Glowing Cyber-Falcon Hologram Centerpiece (Hero 260px) -->
+        <div class="relative mx-auto flex items-center justify-center py-2">
+            <x-souly-logo size="hero" :showText="false" />
         </div>
 
         <!-- Chapter Category Badge -->

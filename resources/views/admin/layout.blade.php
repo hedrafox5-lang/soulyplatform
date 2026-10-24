@@ -9,11 +9,9 @@
         <!-- Top Command Strip -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-obsidian-border/80 pb-5">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyber-purple via-obsidian-surface to-cyber-gold p-[1.5px] shadow-neon-gold shrink-0">
-                    <div class="w-full h-full bg-obsidian-surface rounded-2xl flex items-center justify-center font-black font-mono text-sm text-cyber-gold">
-                        HQ
-                    </div>
-                </div>
+                <a href="{{ url('/') }}" class="shrink-0" title="قلعة سولي الرقمية">
+                    <x-souly-logo size="xs" :showText="false" />
+                </a>
 
                 <div class="space-y-0.5">
                     <div class="flex items-center gap-2.5">

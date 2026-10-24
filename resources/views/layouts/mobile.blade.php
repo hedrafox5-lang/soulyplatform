@@ -8,26 +8,22 @@
         <div class="flex items-center justify-between gap-2">
             
             <!-- Left: Brand Insignia & Live Status Pulse -->
-            <a href="{{ url('/') }}" class="flex items-center gap-2.5 group shrink-0">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyber-purple via-obsidian-surface to-cyber-cyan p-[1.5px] shadow-neon-cyan group-active:scale-95 transition-transform">
-                    <div class="w-full h-full bg-obsidian-surface rounded-xl flex items-center justify-center">
-                        <svg class="w-5 h-5 text-cyber-cyan animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                    </div>
-                </div>
-                <div class="leading-tight">
-                    <div class="flex items-center gap-1.5">
-                        <span class="font-extrabold text-sm text-white font-cairo block">سولي سيتادل</span>
-                        <span class="w-1.5 h-1.5 rounded-full bg-cyber-cyan animate-ping"></span>
-                    </div>
-                    <span class="text-[9px] font-mono text-slate-400">SOULYEG.ONLINE</span>
-                </div>
+            <a href="{{ url('/') }}" class="flex items-center shrink-0">
+                <x-souly-logo size="xs" :showText="true" />
             </a>
 
-            <!-- Right: Quick Wallet Pill, Notifications, Replay Intro & Menu Drawer -->
-            <div class="flex items-center gap-2">
+            <!-- Right: Quick Wallet Pill, Install App, Notifications, Replay Intro & Menu Drawer -->
+            <div class="flex items-center gap-1.5">
                 
+                <!-- Install App Button in Mobile Header -->
+                <button @click="$store.citadel.installApp()" 
+                        type="button"
+                        title="تثبيت تطبيق سولي على هاتفك"
+                        class="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-gradient-to-r from-cyber-cyan/15 to-cyber-gold/15 border border-cyber-cyan/40 text-[10px] font-cairo font-black text-cyber-cyan active:scale-95 transition-all shadow-neon-cyan shrink-0">
+                    <span>تثبيت</span>
+                    <span>📱</span>
+                </button>
+
                 <!-- Quick Wallet Balance Pill -->
                 <a href="{{ url('/portal') }}" 
                    class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-obsidian-surface border border-cyber-cyan/30 text-xs font-mono group active:scale-95 transition-all">
@@ -158,6 +154,28 @@
                         </div>
                     @endauth
                 </div>
+            </div>
+
+            <!-- Install Native PWA App Banner in Drawer -->
+            <div class="my-4 p-3.5 rounded-2xl bg-gradient-to-br from-cyber-cyan/15 via-obsidian-surface to-cyber-gold/10 border border-cyber-cyan/40 space-y-2.5 shadow-neon-cyan">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-white font-cairo flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyber-cyan animate-ping"></span>
+                        <span>تطبيق سولي السيادي 📱</span>
+                    </span>
+                    <span class="text-[9px] font-mono font-bold text-cyber-cyan border border-cyber-cyan/40 px-1.5 py-0.5 rounded-md bg-cyber-cyan/10">NATIVE PWA</span>
+                </div>
+                <p class="text-[11px] text-slate-300 font-readex leading-relaxed">
+                    ثبّت المنصة مباشرة على شاشة هاتفك الرئيسية لتجربة سريعة بدون شريط المتصفح.
+                </p>
+                <button @click="$store.citadel.mobileNavOpen = false; $store.citadel.installApp();" 
+                        type="button" 
+                        class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyber-cyan to-cyber-gold text-obsidian-base font-black text-xs font-cairo shadow-neon-cyan flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                    <svg class="w-4 h-4 text-obsidian-base" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span>تثبيت تطبيق سولي 📱</span>
+                </button>
             </div>
 
             <!-- Drawer Bottom Diagnostics -->

@@ -7,14 +7,12 @@
 <div class="min-h-[80vh] flex items-center justify-center py-8">
     <div class="w-full max-w-lg mx-auto space-y-6">
         
-        <!-- Header Insignia -->
+        <!-- Header Insignia (Falcon Cyber-Emblem) -->
         <div class="text-center space-y-3">
-            <div class="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyber-cyan via-obsidian-surface to-cyber-gold p-[1.5px] shadow-neon-cyan">
-                <div class="w-full h-full bg-obsidian-surface rounded-2xl flex items-center justify-center">
-                    <svg class="w-7 h-7 text-cyber-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                    </svg>
-                </div>
+            <div class="flex justify-center">
+                <a href="{{ url('/') }}">
+                    <x-souly-logo size="md" :showText="false" />
+                </a>
             </div>
             
             <h1 class="text-2xl sm:text-3xl font-black text-white font-cairo">

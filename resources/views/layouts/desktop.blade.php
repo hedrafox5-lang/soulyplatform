@@ -8,21 +8,8 @@
             
             <!-- Left: Brand / Citadel Node Identifier -->
             <div class="flex items-center gap-4">
-                <a href="{{ url('/') }}" class="flex items-center gap-3 group">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyber-purple via-obsidian-surface to-cyber-cyan p-[1px] shadow-neon-cyan">
-                        <div class="w-full h-full bg-obsidian-surface rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-cyber-cyan group-hover:scale-110 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                            </svg>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="font-extrabold text-lg tracking-wider text-slate-100 font-cairo">سولي ديدجيتال سيتادل</span>
-                            <span class="px-2 py-0.5 text-[10px] font-mono rounded-full bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30">L13 · CORE</span>
-                        </div>
-                        <p class="text-[11px] text-slate-400 font-mono tracking-tight">SOULYEG.ONLINE // COMMAND-CENTER</p>
-                    </div>
+                <a href="{{ url('/') }}" class="flex items-center group">
+                    <x-souly-logo size="sm" :showText="true" />
                 </a>
 
                 <!-- Breadcrumbs / Context Display -->
@@ -50,8 +37,19 @@
                 </div>
             </div>
 
-            <!-- Right: Real-time Telemetry, Wallet Pill & Controls -->
+            <!-- Right: Real-time Telemetry, PWA Install, Wallet Pill & Controls -->
             <div class="flex items-center gap-3">
+                <!-- Install App Button (Desktop PWA) -->
+                <button @click="$store.citadel.installApp()" 
+                        type="button"
+                        title="تثبيت منصة سولي كتطبيق مستقل على جهازك"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyber-cyan/15 to-cyber-gold/15 border border-cyber-cyan/40 hover:border-cyber-cyan text-cyber-cyan text-xs font-cairo font-bold transition-all shadow-sm hover:shadow-neon-cyan">
+                    <svg class="w-3.5 h-3.5 text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span class="hidden xl:inline">تثبيت التطبيق 📱</span>
+                </button>
+
                 <!-- Replay Cinematic Story Loader Button -->
                 <button onclick="SoulyLoader.replay()" 
                         title="إعادة العرض السينمائي (25 ثانية)"
