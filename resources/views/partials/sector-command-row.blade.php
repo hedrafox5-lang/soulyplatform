@@ -224,18 +224,19 @@
                         'منظومة سولي السيادية — أداء هندسي معتمد 100%',
                         'جاهزية فورية للتكامل والتشغيل بمقرك أو سحابياً'
                     ];
+                    $desktopPopupPayload = [
+                        'id' => (string) $iconId,
+                        'title' => $card['title'],
+                        'badge_text' => $cfg['badge'],
+                        'popup_title' => $card['title'],
+                        'popup_summary' => $iconSummary,
+                        'popup_bullets' => is_array($iconBullets) ? array_values($iconBullets) : [],
+                        'service_name' => $service->name,
+                        'popup_cta_text' => 'احجز استشارة فورية الآن'
+                    ];
                 @endphp
                 <button type="button"
-                        @click="$dispatch('open-icon-popup', {
-                            id: '{{ $iconId }}',
-                            title: '{{ addslashes($card['title']) }}',
-                            badge_text: '{{ addslashes($cfg['badge']) }}',
-                            popup_title: '{{ addslashes($card['title']) }}',
-                            popup_summary: '{{ addslashes($iconSummary) }}',
-                            popup_bullets: {{ json_encode($iconBullets) }},
-                            service_name: '{{ addslashes($service->name) }}',
-                            popup_cta_text: 'احجز استشارة فورية الآن'
-                        })"
+                        @click="$dispatch('open-icon-popup', {{ json_encode($desktopPopupPayload, JSON_UNESCAPED_UNICODE) }})"
                         class="p-3 rounded-2xl bg-obsidian-surface/90 hover:bg-obsidian-card border border-obsidian-border text-right flex flex-col justify-between gap-2 transition-all duration-200 group/card active:scale-95 shadow-sm hover:shadow-md cursor-pointer"
                         onmouseenter="this.style.borderColor='{{ $cfg['color'] }}'"
                         onmouseleave="this.style.borderColor=''">
@@ -270,19 +271,20 @@
                             'منظومة سولي السيادية — أداء هندسي معتمد 100%',
                             'جاهزية فورية للتكامل والتشغيل بمقرك أو سحابياً'
                         ];
+                        $mobilePopupPayload = [
+                            'id' => (string) $iconId,
+                            'title' => $card['title'],
+                            'badge_text' => $cfg['badge'],
+                            'popup_title' => $card['title'],
+                            'popup_summary' => $iconSummary,
+                            'popup_bullets' => is_array($iconBullets) ? array_values($iconBullets) : [],
+                            'service_name' => $service->name,
+                            'popup_cta_text' => 'احجز استشارة فورية الآن'
+                        ];
                     @endphp
                     <div class="w-[88%] shrink-0 snap-center">
                         <button type="button"
-                                @click="$dispatch('open-icon-popup', {
-                                    id: '{{ $iconId }}',
-                                    title: '{{ addslashes($card['title']) }}',
-                                    badge_text: '{{ addslashes($cfg['badge']) }}',
-                                    popup_title: '{{ addslashes($card['title']) }}',
-                                    popup_summary: '{{ addslashes($iconSummary) }}',
-                                    popup_bullets: {{ json_encode($iconBullets) }},
-                                    service_name: '{{ addslashes($service->name) }}',
-                                    popup_cta_text: 'احجز استشارة فورية الآن'
-                                })"
+                                @click="$dispatch('open-icon-popup', {{ json_encode($mobilePopupPayload, JSON_UNESCAPED_UNICODE) }})"
                                 class="w-full h-full p-4 rounded-2xl bg-obsidian-surface/95 border text-right flex flex-col justify-between gap-3 shadow-lg active:scale-95 transition-all cursor-pointer"
                                 style="border-color: {{ $cfg['border'] }};">
                             <div class="flex items-center justify-between w-full">

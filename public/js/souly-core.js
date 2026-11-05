@@ -12,9 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('touch-optimized');
     }
 
-    // Global Modal & Toast Bus
-    window.SoulyUI = {
-        toast(message, type = 'info') {
+    // Global Modal & Toast Bus (Safe extension without overwriting SoulyUIManager)
+    window.SoulyUI = window.SoulyUI || {};
+    if (!window.SoulyUI.toast) {
+        window.SoulyUI.toast = function(message, type = 'info') {
             const toast = document.createElement('div');
             toast.className = `fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2.5 rounded-2xl text-xs font-bold text-white z-50 transition-all duration-300 shadow-2xl ${
                 type === 'error' ? 'bg-rose-600' : 'bg-cyan-600'
@@ -25,11 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 toast.style.opacity = '0';
                 setTimeout(() => toast.remove(), 300);
             }, 3500);
-        },
-        openWhatsAppModal(key, template, title) {
+        };
+    }
+    if (!window.SoulyUI.openWhatsAppModal) {
+        window.SoulyUI.openWhatsAppModal = function(key, template, title) {
             window.dispatchEvent(new CustomEvent('open-whatsapp-gear', {
                 detail: { key, template, title }
             }));
-        }
-    };
+        };
+    }
 });

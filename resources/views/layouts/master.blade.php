@@ -25,6 +25,7 @@
 
     <!-- PWA & Mobile Sovereign App Meta -->
     <meta name="theme-color" content="#05050A">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="سولي | Souly">
@@ -305,7 +306,9 @@
     <!-- GSAP 3.12 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
 
-
+    <!-- Souly Core Architecture Scripts (Storage & UI Engine v2.5) -->
+    <script src="{{ asset('js/souly-storage.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/souly-ui.js') }}?v={{ time() }}"></script>
 
     <!-- Alpine.js 3.14 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js" defer></script>

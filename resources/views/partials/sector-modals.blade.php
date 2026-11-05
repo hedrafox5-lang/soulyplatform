@@ -207,17 +207,20 @@
 
                         <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
                             @foreach($industryIcons as $icon)
+                                @php
+                                    $indPopupPayload = [
+                                        'id' => (string) $icon->id,
+                                        'title' => $icon->title,
+                                        'badge_text' => $icon->badge_text ?? 'جاهز',
+                                        'popup_title' => $icon->title,
+                                        'popup_summary' => $icon->popup_summary,
+                                        'popup_bullets' => is_array($icon->popup_bullets_json) ? array_values($icon->popup_bullets_json) : [],
+                                        'service_name' => $service->name,
+                                        'popup_cta_text' => $icon->popup_cta_text ?? 'احجز الآن'
+                                    ];
+                                @endphp
                                 <button type="button" 
-                                        @click="$dispatch('open-icon-popup', {
-                                            id: '{{ $icon->id }}',
-                                            title: '{{ addslashes($icon->title) }}',
-                                            badge_text: '{{ addslashes($icon->badge_text ?? 'جاهز') }}',
-                                            popup_title: '{{ addslashes($icon->title) }}',
-                                            popup_summary: '{{ addslashes($icon->popup_summary) }}',
-                                            popup_bullets: {{ json_encode($icon->popup_bullets_json) }},
-                                            service_name: '{{ addslashes($service->name) }}',
-                                            popup_cta_text: '{{ addslashes($icon->popup_cta_text ?? 'احجز الآن') }}'
-                                        })"
+                                        @click="$dispatch('open-icon-popup', {{ json_encode($indPopupPayload, JSON_UNESCAPED_UNICODE) }})"
                                         class="p-4 rounded-2xl bg-obsidian-surface/90 hover:bg-obsidian-card border border-obsidian-border hover:border-cyber-cyan/50 text-right flex flex-col justify-between gap-3 group active:scale-95 transition-all w-full shadow-sm cursor-pointer">
                                     <div class="flex items-center justify-between w-full gap-2">
                                         <div class="w-8 h-8 rounded-xl bg-obsidian-card border border-cyber-cyan/30 flex items-center justify-center text-cyber-cyan group-hover:scale-110 transition-transform shadow-sm shrink-0">
@@ -256,17 +259,20 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
                             @foreach($featureIcons as $feat)
+                                @php
+                                    $featPopupPayload = [
+                                        'id' => (string) $feat->id,
+                                        'title' => $feat->title,
+                                        'badge_text' => $feat->badge_text ?? 'ميزة تقنية',
+                                        'popup_title' => $feat->title,
+                                        'popup_summary' => $feat->popup_summary,
+                                        'popup_bullets' => is_array($feat->popup_bullets_json) ? array_values($feat->popup_bullets_json) : [],
+                                        'service_name' => $service->name,
+                                        'popup_cta_text' => $feat->popup_cta_text ?? 'استكشف التفاصيل'
+                                    ];
+                                @endphp
                                 <button type="button" 
-                                        @click="$dispatch('open-icon-popup', {
-                                            id: '{{ $feat->id }}',
-                                            title: '{{ addslashes($feat->title) }}',
-                                            badge_text: '{{ addslashes($feat->badge_text ?? 'ميزة تقنية') }}',
-                                            popup_title: '{{ addslashes($feat->title) }}',
-                                            popup_summary: '{{ addslashes($feat->popup_summary) }}',
-                                            popup_bullets: {{ json_encode($feat->popup_bullets_json) }},
-                                            service_name: '{{ addslashes($service->name) }}',
-                                            popup_cta_text: '{{ addslashes($feat->popup_cta_text ?? 'استكشف التفاصيل') }}'
-                                        })"
+                                        @click="$dispatch('open-icon-popup', {{ json_encode($featPopupPayload, JSON_UNESCAPED_UNICODE) }})"
                                         class="p-4 rounded-2xl bg-obsidian-surface/90 hover:bg-obsidian-card border border-obsidian-border hover:border-cyber-gold/50 text-right flex flex-col justify-between gap-3 group active:scale-95 transition-all w-full shadow-sm cursor-pointer">
                                     <div class="space-y-2 w-full">
                                         <div class="flex items-center justify-between w-full">

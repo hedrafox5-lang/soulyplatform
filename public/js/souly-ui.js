@@ -719,7 +719,12 @@
             },
 
             startAutoPlay() {
-                if (this.autoPlayTimer) 
+                if (this.autoPlayTimer) {
+                    clearInterval(this.autoPlayTimer);
+                }
+                this.autoPlayTimer = setInterval(() => {
+                    if (!this.isPaused && this.isVisible) {
+                        this.next();
                     }
                 }, this.autoPlayInterval);
             },
