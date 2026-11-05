@@ -23,8 +23,8 @@ class AdminSettingController extends Controller
      */
     protected function authorizeAdmin(): void
     {
-        if (!auth()->check() || auth()->user()->role !== 'admin') {
-            abort(403, 'غير مصرح لغير الإدارة العليا (ROOT) بالوصول إلى إعدادات النظام الحساسة ومزامنة المعرفة.');
+        if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'staff'])) {
+            abort(403, 'غير مصرح لغير الإدارة العليا (ROOT) أو طاقم العمل بالوصول إلى إعدادات النظام ومزامنة المعرفة.');
         }
     }
 
