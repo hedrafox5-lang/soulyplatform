@@ -236,6 +236,7 @@ Route::middleware('auth')->group(function () {
     // 1. Client Portal
     Route::prefix('portal')->name('portal.')->group(function () {
         Route::get('/', [ClientPortalController::class, 'index'])->name('index');
+        Route::match(['post', 'put'], '/profile', [ClientPortalController::class, 'updateProfile'])->name('profile.update');
         
         // Digital Wallet Operations
         Route::get('/wallet', [ClientPortalController::class, 'wallet'])->name('wallet');

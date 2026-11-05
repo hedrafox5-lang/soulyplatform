@@ -1,349 +1,364 @@
 @extends('portal.layout')
 
-@section('title', 'المحفظة الرقمية وسجل العمليات | سولي')
-@section('page-title', 'المحفظة الرقمية وسجل العمليات')
+@section('title', 'أجهزتي وإدارة الصيانة الهندسية | سولي')
+@section('page-title', 'أجهزتي وصيانتها')
 
 @section('portal-content')
 @php
-    $liveSettings = \Illuminate\Support\Facades\DB::table('settings')->pluck('value', 'key');
-    $vfCashNumber = $liveSettings['vodafone_cash_number'] ?? ($gateways['vodafone_cash'] ?? '01090623326');
-    $instapayAddress = $liveSettings['instapay_address'] ?? ($gateways['instapay'] ?? 'souly@instapay');
-    $bankName = $liveSettings['bank_name'] ?? 'البنك الأهلي المصري (NBE)';
-    $bankIban = $liveSettings['bank_iban'] ?? 'EG3800020000000109062332601';
-    $bankAccountName = $liveSettings['bank_account_name'] ?? 'مؤسسة سولي للحلول الرقمية';
+    $devices = $devices ?? collect();
+    $wallet = $wallet ?? (auth()->check() ? auth()->user()->walletOrCreate() : null);
 @endphp
-
 <div class="space-y-6 sm:space-y-8" x-data="{
-    paymentMethod: 'vodafone_cash',
-    depositAmount: {{ old('amount', 500) }},
-    currentBalance: {{ (float) $wallet->balance }},
-    vfNumber: '{{ addslashes($vfCashNumber) }}',
-    ipaAddress: '{{ addslashes($instapayAddress) }}',
-    bankIban: '{{ addslashes($bankIban) }}',
-    quickAmounts: [500, 1200, 2250, 3000, 5000],
-    copy(text) {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text);
-            if (window.Alpine && window.Alpine.store('citadel')) {
-                window.Alpine.store('citadel').showToast(`تم نسخ (${text}) إلى الحافظة بنجاح ✓`);
-            } else {
-                alert(`تم نسخ: ${text}`);
-            }
-        }
+    openAddModal: false,
+    openMaintenanceModal: false,
+    openEditModal: false,
+    selectedDevice: null,
+    maintenanceType: 'on_site_visit',
+    maintenanceHours: 3,
+    hourlyRate: 400,
+    selectForMaintenance(device) {
+        this.selectedDevice = device;
+        this.openMaintenanceModal = true;
     },
-    get projectedBalance() {
-        return (this.currentBalance + (Number(this.depositAmount) || 0)).toFixed(2);
+    selectForEdit(device) {
+        this.selectedDevice = device;
+        this.openEditModal = true;
+    },
+    get calculatedCost() {
+        return (this.maintenanceHours * this.hourlyRate).toFixed(2);
     }
 }">
 
-    <!-- 1. WALLET SUMMARY & BALANCE HEADER -->
-    <div class="rounded-3xl p-6 sm:p-8 lg:p-10 glass-obsidian border border-cyber-cyan/30 shadow-neon-cyan relative overflow-hidden">
-        <div class="absolute -top-24 -left-24 w-80 h-80 rounded-full bg-cyber-cyan/15 blur-3xl pointer-events-none"></div>
-        <div class="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-cyber-gold/10 blur-3xl pointer-events-none"></div>
+    <!-- 1. TOP OVERVIEW & ACTIONS BANNER -->
+    <div class="relative overflow-hidden rounded-3xl glass-obsidian border border-cyber-cyan/40 p-5 sm:p-7 lg:p-8 shadow-[0_4px_30px_rgba(0,245,212,0.1)]">
+        <div class="absolute -top-16 -left-16 w-64 h-64 bg-cyber-cyan/15 rounded-full blur-3xl pointer-events-none"></div>
 
-        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div class="space-y-2">
+        <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 sm:gap-6">
+            <div class="space-y-2 text-right">
+                <span class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/30">
+                    CLIENT HARDWARE VAULT & MAINTENANCE
+                </span>
+                <h2 class="text-lg sm:text-2xl font-black text-white font-cairo">
+                    خزينة أجهزتي وجلسات الصيانة المعتمدة 💻
+                </h2>
+                <p class="text-xs text-slate-300 font-cairo max-w-xl leading-relaxed">
+                    سجل أجهزتك التقنية وأنظمة الكاشير، وتابع تقارير الصيانة الدورية، واطلب زيارة مهندس صيانة ميداني أو تسليم الجهاز لمقر الشركة بسهولة وأمان.
+                </p>
+            </div>
+
+            <button type="button" @click="openAddModal = true"
+                    class="px-5 py-3 rounded-2xl btn-citadel-primary text-xs sm:text-sm font-cairo font-extrabold shadow-neon-cyan flex items-center gap-2 cursor-pointer shrink-0 active:scale-95 transition-all">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>+ تسجيل جهاز جديد</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. QUICK METRICS STATS -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="rounded-2xl glass-obsidian border border-obsidian-border p-4 sm:p-5 flex items-center justify-between">
+            <div class="space-y-1">
+                <span class="text-xs text-slate-400 font-cairo block">إجمالي الأجهزة المسجلة</span>
+                <span class="text-2xl font-black font-mono text-white">{{ $devices->count() }}</span>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-cyber-cyan/15 border border-cyber-cyan/30 text-cyber-cyan flex items-center justify-center text-lg">
+                💻
+            </div>
+        </div>
+
+        <div class="rounded-2xl glass-obsidian border border-obsidian-border p-4 sm:p-5 flex items-center justify-between">
+            <div class="space-y-1">
+                <span class="text-xs text-slate-400 font-cairo block">أجهزة سليمة وجاهزة للعمل</span>
+                <span class="text-2xl font-black font-mono text-emerald-400">{{ $devices->where('status', 'healthy')->count() }}</span>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-lg">
+                ✓
+            </div>
+        </div>
+
+        <div class="rounded-2xl glass-obsidian border border-obsidian-border p-4 sm:p-5 flex items-center justify-between">
+            <div class="space-y-1">
+                <span class="text-xs text-slate-400 font-cairo block">أجهزة تحتاج صيانة أو قيد الإصلاح</span>
+                <span class="text-2xl font-black font-mono text-amber-400">{{ $devices->whereIn('status', ['needs_maintenance', 'visit_requested', 'in_company_repair'])->count() }}</span>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-lg">
+                🔧
+            </div>
+        </div>
+    </div>
+
+    @if (isset($errors) && $errors->any())
+        <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/40 text-xs text-rose-300 font-cairo space-y-1">
+            @foreach ($errors->all() as $error)
                 <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-cyber-cyan animate-pulse"></span>
-                    <span class="text-xs font-mono text-cyber-cyan font-bold uppercase tracking-wider">SOULY VAULT · SECURE BALANCE</span>
+                    <span class="text-rose-400 font-bold">⚠</span>
+                    <span>{{ $error }}</span>
                 </div>
-                <div class="text-xs text-slate-400 font-cairo">الرصيد المالي المتاح للحجز المباشر الفوري:</div>
-                <div class="flex items-baseline gap-3">
-                    <span class="text-4xl sm:text-5xl lg:text-6xl font-black font-mono text-white tracking-tight">
-                        {{ number_format($wallet->balance, 2) }}
-                    </span>
-                    <span class="text-lg font-mono font-bold text-cyber-cyan">{{ $wallet->currency }}</span>
-                </div>
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-3">
-                <a href="#deposit-section" 
-                   class="px-6 py-3 rounded-2xl btn-citadel-primary font-extrabold text-xs sm:text-sm font-cairo shadow-neon-cyan text-center active:scale-95 transition-all">
-                    + شحن المحفظة الآن
-                </a>
-
-                <a href="{{ route('portal.bookings') }}" 
-                   class="px-6 py-3 rounded-2xl btn-citadel-secondary text-white font-bold text-xs sm:text-sm font-cairo text-center transition-all">
-                    حجز خدمة بالرصيد
-                </a>
-            </div>
+            @endforeach
         </div>
-    </div>
+    @endif
 
-    <!-- 2. TOP-UP / DEPOSIT FORM & PAYMENT CHANNELS -->
-    <div id="deposit-section" class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start scroll-mt-24">
-        
-        <div class="lg:col-span-5 space-y-4">
-            <div class="p-5 sm:p-6 rounded-3xl glass-obsidian border border-obsidian-border space-y-4">
-                <h3 class="text-sm sm:text-base font-bold text-white font-cairo flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-cyber-gold"></span>
-                    <span>قنوات التحويل المعتمدة رسمياً</span>
-                </h3>
+    <!-- 3. DEVICES GRID -->
+    @if($devices->count() > 0)
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            @foreach($devices as $device)
+                <div class="rounded-3xl glass-obsidian border border-obsidian-border hover:border-cyber-cyan/40 p-5 sm:p-6 space-y-4 flex flex-col justify-between transition-all group">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="space-y-1 min-w-0">
+                                <h3 class="text-base font-black text-white font-cairo truncate group-hover:text-cyber-cyan transition-colors">
+                                    {{ $device->model_number }}
+                                </h3>
+                                @if(!empty($device->serial_number))
+                                    <div class="text-[11px] font-mono text-slate-400 truncate">
+                                        سيريال: <span class="text-cyber-cyan font-bold">{{ $device->serial_number }}</span>
+                                    </div>
+                                @endif
+                            </div>
 
-                <!-- Channel: Vodafone Cash (Dynamic from Settings) -->
-                <div class="p-3.5 sm:p-4 rounded-2xl bg-obsidian-surface border transition-all cursor-pointer"
-                     :class="paymentMethod === 'vodafone_cash' ? 'border-cyber-cyan bg-cyber-cyan/10 shadow-neon-cyan' : 'border-obsidian-border'"
-                     @click="paymentMethod = 'vodafone_cash'">
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-xl bg-rose-600 text-white font-black text-xs flex items-center justify-center font-mono shrink-0">
-                                VF
-                            </div>
-                            <div>
-                                <span class="text-xs font-bold text-white font-cairo block">فودافون كاش (Vodafone Cash)</span>
-                                <span class="text-xs text-cyber-cyan font-mono font-bold">{{ $vfCashNumber }}</span>
-                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-cairo font-bold shrink-0
+                                @if($device->status === 'healthy') bg-emerald-500/20 text-emerald-400 border border-emerald-500/30
+                                @elseif($device->status === 'visit_requested') bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/30
+                                @elseif($device->status === 'in_company_repair') bg-purple-500/20 text-purple-300 border border-purple-500/30
+                                @elseif($device->status === 'warranty_active') bg-emerald-500/20 text-emerald-300 border border-emerald-500/30
+                                @else bg-amber-500/20 text-amber-300 border border-amber-500/30
+                                @endif">
+                                {{ match($device->status) {
+                                    'healthy' => 'سليم ويعمل ✓',
+                                    'visit_requested' => 'تم طلب زيارة صيانة 🚀',
+                                    'in_company_repair' => 'قيد الصيانة بالشركة ⚙️',
+                                    'warranty_active' => 'ضمان ساري 🛡️',
+                                    default => 'يحتاج فحص وصيانة 🔧'
+                                } }}
+                            </span>
                         </div>
 
-                        <button type="button" @click.stop="copy('{{ addslashes($vfCashNumber) }}')" 
-                                class="px-2.5 py-1 rounded-lg bg-obsidian-base hover:bg-slate-700 text-cyber-cyan text-[10px] font-mono border border-obsidian-border transition-colors cursor-pointer shrink-0">
-                            نسخ الرقم
-                        </button>
+                        <p class="text-xs text-slate-300 font-cairo leading-relaxed bg-obsidian-surface/60 p-3 rounded-xl border border-obsidian-border/80">
+                            {{ Str::limit($device->details, 140) }}
+                        </p>
+
+                        @if(!empty($device->images_json) && is_array($device->images_json))
+                            <div class="flex items-center gap-2 overflow-x-auto py-1">
+                                @foreach($device->images_json as $img)
+                                    <a href="{{ asset('storage/' . $img) }}" target="_blank" class="w-12 h-12 rounded-lg overflow-hidden border border-obsidian-border hover:border-cyber-cyan shrink-0">
+                                        <img src="{{ asset('storage/' . $img) }}" alt="Device Photo" class="w-full h-full object-cover">
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
-                </div>
 
-                <!-- Channel: InstaPay (Dynamic from Settings) -->
-                <div class="p-3.5 sm:p-4 rounded-2xl bg-obsidian-surface border transition-all cursor-pointer"
-                     :class="paymentMethod === 'instapay' ? 'border-cyber-cyan bg-cyber-cyan/10 shadow-neon-cyan' : 'border-obsidian-border'"
-                     @click="paymentMethod = 'instapay'">
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-xl bg-purple-600 text-white font-black text-xs flex items-center justify-center font-mono shrink-0">
-                                IP
-                            </div>
-                            <div>
-                                <span class="text-xs font-bold text-white font-cairo block">إنستاباي اللحظي (InstaPay)</span>
-                                <span class="text-xs text-cyber-cyan font-mono font-bold">{{ $instapayAddress }}</span>
-                            </div>
-                        </div>
-
-                        <button type="button" @click.stop="copy('{{ addslashes($instapayAddress) }}')" 
-                                class="px-2.5 py-1 rounded-lg bg-obsidian-base hover:bg-slate-700 text-cyber-cyan text-[10px] font-mono border border-obsidian-border transition-colors cursor-pointer shrink-0">
-                            نسخ المعرف
+                    <div class="pt-3 border-t border-obsidian-border flex items-center justify-between gap-2 flex-wrap">
+                        <button type="button" 
+                                @click="selectForMaintenance({{ json_encode($device) }})"
+                                class="px-3.5 py-2 rounded-xl btn-citadel-primary text-xs font-cairo font-bold flex items-center gap-1.5 shadow-neon-cyan cursor-pointer">
+                            <span>🔧</span>
+                            <span>طلب صيانة</span>
                         </button>
-                    </div>
-                </div>
 
-                <!-- Channel: Bank Transfer (Dynamic from Settings) -->
-                <div class="p-3.5 sm:p-4 rounded-2xl bg-obsidian-surface border transition-all cursor-pointer"
-                     :class="paymentMethod === 'bank_transfer' ? 'border-cyber-cyan bg-cyber-cyan/10 shadow-neon-cyan' : 'border-obsidian-border'"
-                     @click="paymentMethod = 'bank_transfer'">
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between gap-2">
-                            <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white font-black text-xs flex items-center justify-center font-mono shrink-0">
-                                    🏦
-                                </div>
-                                <div>
-                                    <span class="text-xs font-bold text-white font-cairo block">{{ $bankName }}</span>
-                                    <span class="text-[10px] text-slate-300 font-cairo">{{ $bankAccountName }}</span>
-                                </div>
-                            </div>
-                            <button type="button" @click.stop="copy('{{ addslashes($bankIban) }}')" 
-                                    class="px-2.5 py-1 rounded-lg bg-obsidian-base hover:bg-slate-700 text-cyber-cyan text-[10px] font-mono border border-obsidian-border transition-colors cursor-pointer shrink-0">
-                                نسخ IBAN
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" 
+                                    @click="selectForEdit({{ json_encode($device) }})"
+                                    title="تعديل بيانات الجهاز"
+                                    class="p-2 rounded-xl bg-obsidian-surface hover:bg-obsidian-card text-slate-300 hover:text-white border border-obsidian-border transition-colors cursor-pointer text-xs">
+                                ✏️
                             </button>
-                        </div>
-                        <div class="text-[10px] font-mono text-slate-300 bg-black/30 px-2.5 py-1 rounded-lg select-all break-all">
-                            {{ $bankIban }}
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Channel: Paymob -->
-                <div class="p-3.5 sm:p-4 rounded-2xl bg-obsidian-surface border transition-all cursor-pointer relative overflow-hidden"
-                     :class="paymentMethod === 'paymob' ? 'border-cyber-cyan bg-cyber-cyan/10 shadow-neon-cyan' : 'border-obsidian-border hover:border-slate-600'"
-                     @click="paymentMethod = 'paymob'">
-                    <span class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-cyber-cyan/20 text-cyber-cyan text-[9px] font-cairo font-bold border border-cyber-cyan/40">
-                        فوري ⚡
-                    </span>
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyber-cyan to-blue-600 text-obsidian-base font-black text-xs flex items-center justify-center font-mono shadow-sm">
-                            💳
-                        </div>
-                        <div>
-                            <span class="text-xs font-bold text-white font-cairo block">دفع إلكتروني فوري (Paymob)</span>
-                            <span class="text-[10px] text-slate-300 font-cairo">فيزا، ماستركارد، ميزة، المحافظ الذكية</span>
+                            @if(!in_array($device->status, ['visit_requested', 'in_company_repair']))
+                                <form action="{{ route('portal.devices.destroy', $device) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا الجهاز نهائياً من قائمتك؟');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" 
+                                            title="حذف الجهاز"
+                                            class="p-2 rounded-xl bg-obsidian-surface hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-obsidian-border hover:border-rose-500/40 transition-colors cursor-pointer text-xs">
+                                        🗑️
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </div>
                 </div>
-
-                <!-- Live Dynamic Payment Summary Card -->
-                <div class="p-4 rounded-2xl bg-gradient-to-br from-obsidian-surface to-obsidian-card border border-cyber-cyan/30 space-y-2">
-                    <div class="flex items-center justify-between border-b border-obsidian-border/80 pb-2">
-                        <span class="text-xs font-cairo font-bold text-white">بيانات القناة المختارة حالياً:</span>
-                        <span class="text-[10px] font-mono text-cyber-cyan font-bold" x-text="paymentMethod.toUpperCase()"></span>
-                    </div>
-                    <div class="text-xs font-cairo text-slate-200 font-bold"
-                         x-text="paymentMethod === 'instapay' ? ('معرف إنستاباي: ' + ipaAddress) : (paymentMethod === 'vodafone_cash' ? ('فودافون كاش: ' + vfNumber) : (paymentMethod === 'bank_transfer' ? ('آيبان البنك: ' + bankIban) : 'بوابة Paymob الإلكترونية'))">
-                    </div>
-                </div>
-            </div>
+            @endforeach
         </div>
+    @else
+        <div class="p-10 rounded-3xl glass-obsidian border border-obsidian-border text-center space-y-4">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-cyber-cyan/10 border border-cyber-cyan/30 text-cyber-cyan flex items-center justify-center text-3xl">
+                💻
+            </div>
+            <div class="space-y-1">
+                <h3 class="text-base font-bold text-white font-cairo">لا توجد أجهزة مسجلة في خزينتك حتى الآن</h3>
+                <p class="text-xs text-slate-400 font-cairo max-w-md mx-auto">
+                    سجل أجهزة الكاشير، الطابعات، أجهزة الباركود، أو السيرفرات الخاصة بك لتتمكن من جدولة الصيانة وطلب المهندس الميداني بضغطة زر.
+                </p>
+            </div>
+            <button type="button" @click="openAddModal = true"
+                    class="px-6 py-2.5 rounded-xl btn-citadel-primary text-xs font-cairo font-bold shadow-neon-cyan cursor-pointer">
+                + تسجيل أول جهاز الآن
+            </button>
+        </div>
+    @endif
 
-        <!-- Right: Submit Deposit Form -->
-        <div class="lg:col-span-7">
-            <div class="p-5 sm:p-8 rounded-3xl glass-obsidian border border-obsidian-border space-y-5">
-                <div class="border-b border-obsidian-border/80 pb-3">
-                    <h3 class="text-base sm:text-lg font-bold text-white font-cairo">
-                        تأكيد وإرسال إشعار الشحن
-                    </h3>
-                    <p class="text-xs text-slate-400 font-cairo mt-1">
-                        بعد تحويل المبلغ عبر أي من القنوات الموضحة، املأ البيانات التالية لربط التحويل بمحفظتك فورياً.
-                    </p>
+    <!-- 4. MODAL: ADD NEW DEVICE -->
+    <div x-show="openAddModal" x-cloak class="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+        <div @click.away="openAddModal = false" class="relative w-full max-w-lg glass-obsidian border border-cyber-cyan/40 rounded-t-3xl sm:rounded-3xl p-5 sm:p-7 space-y-5 shadow-2xl max-h-[90dvh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-obsidian-border pb-3">
+                <h3 class="text-base sm:text-lg font-black text-white font-cairo">💻 تسجيل جهاز جديد في الخزينة</h3>
+                <button type="button" @click="openAddModal = false" class="text-slate-400 hover:text-white p-1">✕</button>
+            </div>
+
+            <form action="{{ route('portal.devices.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs font-cairo text-right">
+                @csrf
+                <div class="space-y-1">
+                    <label class="text-slate-300 font-bold block">اسم وموديل الجهاز *</label>
+                    <input type="text" name="model_number" required placeholder="مثال: POS Sunmi T2s / طابعة إيصالات Xprinter" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3.5 py-2.5 text-white focus:border-cyber-cyan focus:outline-none">
                 </div>
 
-                @if ($errors->any())
-                    <div class="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/40 text-xs text-rose-300 font-cairo space-y-1">
-                        @foreach ($errors->all() as $error)
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-rose-400 font-bold">⚠</span>
-                                <span>{{ $error }}</span>
-                            </div>
-                        @endforeach
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="text-slate-300 font-bold block">الرقم التسلسلي (Serial Number)</label>
+                        <input type="text" name="serial_number" placeholder="اختياري أو ملصق خلف الجهاز" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3.5 py-2.5 text-white font-mono focus:border-cyber-cyan focus:outline-none">
                     </div>
-                @endif
-
-                <form action="{{ route('portal.wallet.deposit') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
-                    @csrf
-                    <input type="hidden" name="payment_method" :value="paymentMethod">
-
-                    <div class="space-y-1.5 text-right">
-                        <label class="block text-[11px] font-bold text-slate-300 font-cairo">
-                            مبالغ شحن سريعة بنقرة واحدة:
-                        </label>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <template x-for="amt in quickAmounts" :key="amt">
-                                <button type="button" 
-                                        @click="depositAmount = amt" 
-                                        class="px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition-all active:scale-95 cursor-pointer"
-                                        :class="depositAmount == amt ? 'bg-cyber-cyan text-obsidian-base font-black border-cyber-cyan shadow-neon-cyan' : 'bg-obsidian-surface text-slate-300 border-obsidian-border hover:border-slate-600'">
-                                    <span x-text="`${amt.toLocaleString()} ج.م`"></span>
-                                </button>
-                            </template>
-                        </div>
+                    <div class="space-y-1">
+                        <label class="text-slate-300 font-bold block">الحالة الراهنة للجهاز</label>
+                        <select name="status" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-2.5 text-white focus:border-cyber-cyan focus:outline-none">
+                            <option value="needs_maintenance">يحتاج صيانة وفحص فني</option>
+                            <option value="healthy">سليم ويعمل بكفاءة</option>
+                        </select>
                     </div>
+                </div>
 
-                    <div class="space-y-1.5 text-right">
-                        <label for="amount" class="block text-xs font-bold text-slate-300 font-cairo">
-                            المبلغ المراد شحنه (بالجنيه المصري EGP)
-                        </label>
-                        <div class="relative">
-                            <input type="number" step="0.01" min="50" max="1000000" id="amount" name="amount" x-model.number="depositAmount" required
-                                   placeholder="500.00"
-                                   class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:border-cyber-cyan transition-colors">
-                            <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-xs font-mono text-slate-400">
-                                EGP
-                            </div>
-                        </div>
-                    </div>
+                <div class="space-y-1">
+                    <label class="text-slate-300 font-bold block">مواصفات الجهاز أو تفاصيل العطل *</label>
+                    <textarea name="details" rows="3" required placeholder="اكتب وصفاً موجزاً لمواصفات الجهاز أو تفاصيل المشكلة التي تود فحصها..." class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3.5 py-2.5 text-white focus:border-cyber-cyan focus:outline-none"></textarea>
+                </div>
 
-                    <div class="p-3.5 rounded-2xl bg-gradient-to-r from-obsidian-surface to-cyber-cyan/10 border border-cyber-cyan/30 flex items-center justify-between text-xs font-cairo">
-                        <span class="text-slate-300">الرصيد الإجمالي المتوقع بعد الإيداع:</span>
-                        <div class="flex items-baseline gap-1 font-mono">
-                            <span class="text-lg font-black text-cyber-cyan" x-text="projectedBalance"></span>
-                            <span class="text-[10px] text-slate-400">EGP</span>
-                        </div>
-                    </div>
+                <div class="space-y-1">
+                    <label class="text-slate-300 font-bold block">صور توضيحية للجهاز أو العطل (اختياري - حتى 5 صور)</label>
+                    <input type="file" name="images[]" multiple accept="image/*" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3.5 py-2 text-slate-300 text-[11px] focus:outline-none">
+                </div>
 
-                    <div x-show="paymentMethod !== 'paymob'" class="space-y-3">
-                        <div class="space-y-1.5 text-right">
-                            <label for="sender_number_or_account" class="block text-xs font-bold text-slate-300 font-cairo">
-                                رقم المحفظة / الحساب المحول منه (أو كود العملية)
-                            </label>
-                            <input type="text" id="sender_number_or_account" name="sender_number_or_account" value="{{ old('sender_number_or_account') }}"
-                                   placeholder="مثال: 01012345678 أو حساب InstaPay"
-                                   :required="paymentMethod !== 'paymob'"
-                                   class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyber-cyan font-mono">
-                        </div>
-
-                        <div class="space-y-1.5 text-right">
-                            <label for="receipt" class="block text-xs font-bold text-slate-300 font-cairo">
-                                صورة إيصال التحويل (اختياري لتسريع الاعتماد)
-                            </label>
-                            <input type="file" id="receipt" name="receipt" accept="image/*,.pdf"
-                                   class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-4 py-2 text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-cairo file:btn-citadel-primary file:text-obsidian-base file:font-bold">
-                        </div>
-                    </div>
-
-                    <button type="submit"
-                            :class="paymentMethod === 'paymob' ? 'btn-citadel-primary shadow-neon-cyan' : 'btn-citadel-gold shadow-neon-gold'"
-                            class="w-full py-3.5 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 font-cairo font-bold transition-all cursor-pointer active:scale-95">
-                        <span x-text="paymentMethod === 'paymob' ? 'الانتقال للدفع الفوري (Paymob Checkout ⚡)' : 'إرسال إشعار الإيداع للاعتماد ✓'"></span>
-                    </button>
-                </form>
-            </div>
+                <div class="pt-3 border-t border-obsidian-border flex items-center justify-end gap-2">
+                    <button type="button" @click="openAddModal = false" class="px-4 py-2.5 rounded-xl bg-obsidian-surface text-slate-300 font-bold">إلغاء</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-xl btn-citadel-primary font-black shadow-neon-cyan">حفظ وتسجيل الجهاز ✓</button>
+                </div>
+            </form>
         </div>
-
     </div>
 
-    <!-- 3. COMPREHENSIVE WALLET TRANSACTIONS LEDGER -->
-    <div class="rounded-3xl glass-obsidian border border-obsidian-border p-5 sm:p-7 lg:p-8 space-y-6">
-        <div class="flex items-center justify-between border-b border-obsidian-border/80 pb-4">
-            <div>
-                <h3 class="text-base sm:text-lg font-bold text-white font-cairo flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-cyber-cyan"></span>
-                    <span>سجل القيود المالية والمعاملات (Ledger)</span>
-                </h3>
+    <!-- 5. MODAL: REQUEST MAINTENANCE -->
+    <div x-show="openMaintenanceModal" x-cloak class="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+        <div @click.away="openMaintenanceModal = false" class="relative w-full max-w-lg glass-obsidian border border-cyber-cyan/40 rounded-t-3xl sm:rounded-3xl p-5 sm:p-7 space-y-5 shadow-2xl max-h-[90dvh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-obsidian-border pb-3">
+                <div>
+                    <h3 class="text-base sm:text-lg font-black text-white font-cairo">🔧 طلب صيانة هندسية للجهاز</h3>
+                    <p class="text-xs text-cyber-cyan font-mono" x-text="selectedDevice?.model_number"></p>
+                </div>
+                <button type="button" @click="openMaintenanceModal = false" class="text-slate-400 hover:text-white p-1">✕</button>
             </div>
+
+            <form :action="'/portal/devices/' + (selectedDevice?.id || '') + '/maintenance'" method="POST" class="space-y-4 text-xs font-cairo text-right">
+                @csrf
+                <div class="space-y-1.5">
+                    <label class="text-slate-300 font-bold block">نوع الصيانة المطلوبة *</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <label class="p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition-all"
+                               :class="maintenanceType === 'on_site_visit' ? 'border-cyber-cyan bg-cyber-cyan/15 text-white' : 'border-obsidian-border bg-obsidian-surface text-slate-300'">
+                            <input type="radio" name="maintenance_type" value="on_site_visit" x-model="maintenanceType" class="hidden">
+                            <span>🚀</span>
+                            <span class="font-bold">زيارة مهندس للموقع</span>
+                        </label>
+                        <label class="p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition-all"
+                               :class="maintenanceType === 'in_company' ? 'border-cyber-cyan bg-cyber-cyan/15 text-white' : 'border-obsidian-border bg-obsidian-surface text-slate-300'">
+                            <input type="radio" name="maintenance_type" value="in_company" x-model="maintenanceType" class="hidden">
+                            <span>🏢</span>
+                            <span class="font-bold">صيانة بمقر سولي</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="text-slate-300 font-bold block">الموعد المقترح *</label>
+                        <input type="date" name="scheduled_at" required min="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-2 text-white focus:border-cyber-cyan focus:outline-none">
+                    </div>
+
+                    <div class="space-y-1" x-show="maintenanceType === 'on_site_visit'">
+                        <label class="text-slate-300 font-bold block">عدد الساعات التقديرية (الحد الأدنى 3)</label>
+                        <input type="number" name="hours" min="3" max="12" x-model="maintenanceHours" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-2 text-white font-mono focus:border-cyber-cyan focus:outline-none">
+                    </div>
+
+                    <div class="space-y-1" x-show="maintenanceType === 'in_company'">
+                        <label class="text-slate-300 font-bold block">طريقة تسليم الجهاز</label>
+                        <input type="text" name="delivery_method" placeholder="تسليم شخصي بمقر المعادي أو شركة شحن" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-2 text-white focus:border-cyber-cyan focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-slate-300 font-bold block">العنوان بالتفصيل *</label>
+                    <input type="text" name="address" required placeholder="المدينة، الحي، اسم الفرع أو عنوان الشركة" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3.5 py-2.5 text-white focus:border-cyber-cyan focus:outline-none">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-slate-300 font-bold block">تفاصيل العطل أو متطلبات الفحص *</label>
+                    <textarea name="issue_notes" rows="3" required placeholder="اشرح المشكلة بالتفصيل لمساعدة المهندس في تحضير قطع الغيار والأدوات المناسبة..." class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3.5 py-2.5 text-white focus:border-cyber-cyan focus:outline-none"></textarea>
+                </div>
+
+                <div class="p-3.5 rounded-xl bg-obsidian-surface border border-cyber-cyan/30 flex items-center justify-between text-xs" x-show="maintenanceType === 'on_site_visit'">
+                    <span class="text-slate-300">تكلفة الزيارة الهندسية المقدرة:</span>
+                    <strong class="text-cyber-cyan font-mono text-sm" x-text="calculatedCost + ' EGP'"></strong>
+                </div>
+
+                <div class="pt-3 border-t border-obsidian-border flex items-center justify-end gap-2">
+                    <button type="button" @click="openMaintenanceModal = false" class="px-4 py-2.5 rounded-xl bg-obsidian-surface text-slate-300 font-bold">إلغاء</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-xl btn-citadel-primary font-black shadow-neon-cyan">تأكيد إرسال طلب الصيانة ✓</button>
+                </div>
+            </form>
         </div>
+    </div>
 
-        @if($transactions->count() > 0)
-            <div class="overflow-x-auto rounded-2xl border border-obsidian-border/80 overscroll-contain">
-                <table class="w-full text-right text-xs min-w-[580px]">
-                    <thead class="bg-obsidian-surface text-slate-400 border-b border-obsidian-border font-cairo">
-                        <tr>
-                            <th class="py-3 px-3">الرقم المرجعي</th>
-                            <th class="py-3 px-3">النوع</th>
-                            <th class="py-3 px-3">المبلغ</th>
-                            <th class="py-3 px-3">وسيلة الدفع</th>
-                            <th class="py-3 px-3">الحالة</th>
-                            <th class="py-3 px-3">التاريخ</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-obsidian-border/50 font-mono">
-                        @foreach($transactions as $tx)
-                            <tr class="hover:bg-obsidian-surface/40 transition-colors">
-                                <td class="py-3.5 px-3 text-cyber-cyan font-bold">{{ $tx->reference_code }}</td>
-                                <td class="py-3.5 px-3 font-cairo">
-                                    @if($tx->type === 'deposit')
-                                        <span class="text-emerald-400">إيداع وشحن رصيد</span>
-                                    @elseif($tx->type === 'purchase')
-                                        <span class="text-slate-200">حجز وشراء خدمة</span>
-                                    @elseif($tx->type === 'refund')
-                                        <span class="text-cyan-400">استرداد مالي</span>
-                                    @else
-                                        <span class="text-slate-400">{{ $tx->type }}</span>
-                                    @endif
-                                </td>
-                                <td class="py-3.5 px-3 font-bold {{ $tx->type === 'deposit' ? 'text-emerald-400' : 'text-rose-400' }}">
-                                    {{ $tx->type === 'deposit' ? '+' : '-' }}{{ number_format($tx->amount, 2) }} EGP
-                                </td>
-                                <td class="py-3.5 px-3 text-slate-300 font-cairo">{{ $tx->payment_method }}</td>
-                                <td class="py-3.5 px-3">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold font-cairo
-                                        @if($tx->status === 'approved') bg-emerald-500/15 text-emerald-400 border border-emerald-500/30
-                                        @elseif($tx->status === 'pending') bg-amber-500/15 text-amber-400 border border-amber-500/30
-                                        @else bg-rose-500/15 text-rose-400 border border-rose-500/30
-                                        @endif">
-                                        {{ $tx->status === 'approved' ? 'معتمد' : ($tx->status === 'pending' ? 'قيد المراجعة' : 'مرفوض') }}
-                                    </span>
-                                </td>
-                                <td class="py-3.5 px-3 text-slate-400 text-[11px]">{{ $tx->created_at->format('Y-m-d H:i') }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+    <!-- 6. MODAL: EDIT DEVICE -->
+    <div x-show="openEditModal" x-cloak class="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+        <div @click.away="openEditModal = false" class="relative w-full max-w-lg glass-obsidian border border-cyber-cyan/40 rounded-t-3xl sm:rounded-3xl p-5 sm:p-7 space-y-5 shadow-2xl max-h-[90dvh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-obsidian-border pb-3">
+                <h3 class="text-base sm:text-lg font-black text-white font-cairo">✏️ تعديل بيانات الجهاز</h3>
+                <button type="button" @click="openEditModal = false" class="text-slate-400 hover:text-white p-1">✕</button>
             </div>
 
-            <div class="pt-4 border-t border-obsidian-border/60">
-                {{ $transactions->links() }}
-            </div>
-        @else
-            <div class="p-8 text-center text-xs text-slate-500 font-cairo">
-                لا توجد معاملات مالية مسجلة في محفظتك حتى الآن.
-            </div>
-        @endif
+            <form :action="'/portal/devices/' + (selectedDevice?.id || '')" method="POST" class="space-y-4 text-xs font-cairo text-right">
+                @csrf
+                @method('PUT')
+                <div class="space-y-1">
+                    <label class="text-slate-300 font-bold block">اسم وموديل الجهاز *</label>
+                    <input type="text" name="model_number" required :value="selectedDevice?.model_number" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3.5 py-2.5 text-white focus:border-cyber-cyan focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="text-slate-300 font-bold block">الرقم التسلسلي</label>
+                        <input type="text" name="serial_number" :value="selectedDevice?.serial_number" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3.5 py-2.5 text-white font-mono focus:border-cyber-cyan focus:outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-slate-300 font-bold block">حالة الجهاز</label>
+                        <select name="status" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-2.5 text-white focus:border-cyber-cyan focus:outline-none">
+                            <option value="needs_maintenance" :selected="selectedDevice?.status === 'needs_maintenance'">يحتاج صيانة</option>
+                            <option value="healthy" :selected="selectedDevice?.status === 'healthy'">سليم ويعمل</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-slate-300 font-bold block">المواصفات وتفاصيل الجهاز *</label>
+                    <textarea name="details" rows="3" required :value="selectedDevice?.details" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3.5 py-2.5 text-white focus:border-cyber-cyan focus:outline-none"></textarea>
+                </div>
+
+                <div class="pt-3 border-t border-obsidian-border flex items-center justify-end gap-2">
+                    <button type="button" @click="openEditModal = false" class="px-4 py-2.5 rounded-xl bg-obsidian-surface text-slate-300 font-bold">إلغاء</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-xl btn-citadel-primary font-black shadow-neon-cyan">تحديث البيانات ✓</button>
+                </div>
+            </form>
+        </div>
     </div>
 
 </div>

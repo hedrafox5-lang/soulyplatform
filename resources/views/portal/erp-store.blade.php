@@ -1,3 +1,11 @@
+@php
+    $powerMeter = $powerMeter ?? 0;
+    $hasCore = $hasCore ?? false;
+    $hasActiveLicense = $hasActiveLicense ?? false;
+    $purchasedModules = $purchasedModules ?? collect();
+    $purchasedFeatures = $purchasedFeatures ?? collect();
+    $licenseKey = $licenseKey ?? null;
+@endphp
 @extends('portal.layout')
 
 @section('title', 'إدارة منظومة BrandERP والتراخيص | بوابة العميل')

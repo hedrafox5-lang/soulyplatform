@@ -5,7 +5,7 @@
 
 @section('portal-content')
 <div class="space-y-8" x-data="bookingManagerController({
-    services: {{ Js::from($services) }},
+    services: {{ Js::from($services ?? []) }},
     walletBalance: {{ (float) ($wallet->balance ?? 0) }},
     preselectedService: {{ Js::from(request()->query('service', '')) }},
     preselectedPackage: {{ Js::from(request()->query('package', '')) }}
@@ -34,7 +34,7 @@
         </button>
     </div>
 
-    @if ($errors->any())
+    @if (isset($errors) && $errors->any())
         <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/40 text-xs text-rose-300 font-cairo space-y-1">
             @foreach ($errors->all() as $error)
                 <div class="flex items-center gap-2">
@@ -195,13 +195,15 @@
                                     </div>
 
                                     @if($b->status === 'confirmed')
-                                        <form action="{{ route('portal.bookings.start_visit', $b->id) }}" method="POST">
-                                            @csrf
-                                            <button type="submit"
-                                                    class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyber-cyan to-[#00BB9B] text-obsidian-base font-black text-xs font-cairo shadow-neon-cyan active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
-                                                <span>▶ بدء الزيارة وتشغيل العداد</span>
-                                            </button>
-                                        </form>
+                                        @if(Route::has('portal.bookings.start_visit'))
+                                            <form action="{{ route('portal.bookings.start_visit', $b->id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyber-cyan to-[#00BB9B] text-obsidian-base font-black text-xs font-cairo shadow-neon-cyan active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+                                                    <span>▶ بدء الزيارة وتشغيل العداد</span>
+                                                </button>
+                                            </form>
+                                        @endif
                                     @endif
                                 </div>
 
@@ -221,13 +223,15 @@
                                         </div>
                                     </div>
 
-                                    <div class="pt-2 flex justify-end">
-                                        <button type="button"
-                                                @click="completeModalOpen = true"
-                                                class="px-6 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-black text-xs font-cairo shadow-lg active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
-                                            <span>⏹ إنهاء الزيارة وتسديد الحساب</span>
-                                        </button>
-                                    </div>
+                                    @if(Route::has('portal.bookings.complete_visit'))
+                                        <div class="pt-2 flex justify-end">
+                                            <button type="button"
+                                                    @click="completeModalOpen = true"
+                                                    class="px-6 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-black text-xs font-cairo shadow-lg active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+                                                <span>⏹ إنهاء الزيارة وتسديد الحساب</span>
+                                            </button>
+                                        </div>
+                                    @endif
                                 @endif
 
                                 <!-- Completion, Hardware & Rating Modal -->
@@ -245,7 +249,7 @@
                                             <button type="button" @click="completeModalOpen = false" class="text-slate-400 hover:text-white">✕</button>
                                         </div>
 
-                                        <form action="{{ route('portal.bookings.complete_visit', $b->id) }}" method="POST" class="space-y-4"
+                                        <form action="{{ Route::has('portal.bookings.complete_visit') ? route('portal.bookings.complete_visit', $b->id) : '#' }}" method="POST" class="space-y-4"
                                               x-data="{
                                                   rating: 5,
                                                   parts: [],

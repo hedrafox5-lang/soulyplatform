@@ -816,6 +816,232 @@
         };
     };
 
+    /**
+     * =========================================================================
+     * 6. GLOBAL SOULY AI INTERACTIVE AGENT CONTROLLER (Alpine.js)
+     * =========================================================================
+     */
+    global.soulyAiWidgetController = function soulyAiWidgetController() {
+        return {
+            isOpen: false,
+            isTyping: false,
+            inputMessage: '',
+            conversationId: localStorage.getItem('souly_ai_conversation_id') || '',
+            visitorUuid: '',
+            visitorName: '',
+            welcomeMessage: 'أهلاً بيك في منظومة سولي! أنا سولي، مستشارك التقني الذكي.. أتشرف باسم حضرتك الأول؟',
+            messages: [],
+
+            init() {
+                // Force strict initial closed state
+                this.isOpen = false;
+                if (this.$store && this.$store.citadel) {
+                    this.$store.citadel.aiSheetOpen = false;
+                }
+
+                this.visitorUuid = window.SoulyIdentity ? window.SoulyIdentity.getUuid() : (localStorage.getItem('souly_visitor_uuid') || '');
+                this.visitorName = window.SoulyIdentity ? window.SoulyIdentity.getName() : (localStorage.getItem('souly_visitor_name') || '');
+                this.updateGreeting();
+
+                // Clean store watch (only triggers on intentional boolean change)
+                if (this.$store && this.$store.citadel) {
+                    this.$watch('$store.citadel.aiSheetOpen', (val) => {
+                        const nextVal = Boolean(val);
+                        if (this.isOpen !== nextVal) {
+                            if (nextVal) {
+                                this.openWidget();
+                            } else {
+                                this.closeWidget();
+                            }
+                        }
+                    });
+                }
+            },
+
+            updateGreeting() {
+                if (this.visitorName) {
+                    this.welcomeMessage = `أهلاً بك يا ${this.visitorName}، نورت منصة سولي مجدداً! تحب نكمل استفسارنا السابق ولا نناقش موضوع جديد؟`;
+                }
+            },
+
+            editVisitorName() {
+                const currentName = this.visitorName || '';
+                const newName = prompt('أدخل أو عدّل اسمك الكريم:', currentName);
+                if (newName !== null && newName.trim() !== '') {
+                    const cleaned = newName.trim();
+                    this.visitorName = cleaned;
+                    if (window.SoulyIdentity) window.SoulyIdentity.setName(cleaned);
+                    localStorage.setItem('souly_visitor_name', cleaned);
+                    this.updateGreeting();
+                    this.inputMessage = `اسمي ${cleaned}`;
+                    this.sendMessage();
+                }
+            },
+
+            loadHistory() {
+                if (this.messages.length > 0) return;
+                const vUuid = this.visitorUuid || (window.SoulyIdentity ? window.SoulyIdentity.getUuid() : '');
+                let url = '/api/ai/history';
+                if (this.conversationId) {
+                    url = `/api/ai/history/${this.conversationId}?visitor_uuid=${encodeURIComponent(vUuid)}`;
+                } else if (vUuid) {
+                    url = `/api/ai/history?visitor_uuid=${encodeURIComponent(vUuid)}`;
+                }
+
+                fetch(url)
+                    .then(res => res.ok ? res.json() : {})
+                    .then(data => {
+                        if (data.session_uuid) {
+                            this.conversationId = data.session_uuid;
+                            localStorage.setItem('souly_ai_conversation_id', data.session_uuid);
+                        }
+                        if (data.visitor_name) {
+                            this.visitorName = data.visitor_name;
+                            if (window.SoulyIdentity) window.SoulyIdentity.setName(data.visitor_name);
+                        }
+                        if (data.messages && data.messages.length > 0) {
+                            this.messages = data.messages;
+                            this.scrollToBottom();
+                        }
+                    }).catch(() => {});
+            },
+
+            openWidget() {
+                this.isOpen = true;
+                if (this.$store && this.$store.citadel) {
+                    this.$store.citadel.aiSheetOpen = true;
+                }
+                if (window.SoulyUI && typeof window.SoulyUI.lockScroll === 'function') {
+                    window.SoulyUI.lockScroll('ai-widget');
+                }
+                this.$nextTick(() => {
+                    if (this.$refs.chatContainer) {
+                        this.$refs.chatContainer.style.removeProperty('display');
+                    }
+                });
+                this.loadHistory();
+                this.scrollToBottom();
+            },
+
+            closeWidget() {
+                this.isOpen = false;
+                if (this.$store && this.$store.citadel) {
+                    this.$store.citadel.aiSheetOpen = false;
+                }
+                if (window.SoulyUI && typeof window.SoulyUI.unlockScroll === 'function') {
+                    window.SoulyUI.unlockScroll('ai-widget');
+                }
+
+                // Force DOM safeguard to override any GSAP animation interference
+                this.$nextTick(() => {
+                    if (this.$refs.chatContainer) {
+                        this.$refs.chatContainer.style.setProperty('display', 'none', 'important');
+                    }
+                });
+            },
+
+            toggleWidget(forceState = null) {
+                if (forceState && typeof forceState === 'object' && forceState.detail) {
+                    forceState = forceState.detail.open;
+                }
+                const next = forceState !== null && forceState !== undefined ? Boolean(forceState) : !this.isOpen;
+                if (next) {
+                    this.openWidget();
+                } else {
+                    this.closeWidget();
+                }
+            },
+
+            sendPrompt(promptText) {
+                this.inputMessage = promptText;
+                this.sendMessage();
+            },
+
+            sendMessage() {
+                const text = this.inputMessage.trim();
+                if (!text || this.isTyping) return;
+
+                this.messages.push({
+                    sender: 'visitor',
+                    content: text
+                });
+
+                this.inputMessage = '';
+                this.isTyping = true;
+                this.scrollToBottom();
+
+                const vUuid = this.visitorUuid || (window.SoulyIdentity ? window.SoulyIdentity.getUuid() : '');
+
+                fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify({
+                        message: text,
+                        conversation_id: this.conversationId,
+                        visitor_uuid: vUuid,
+                        visitor_name: this.visitorName,
+                        device_fingerprint: navigator.userAgent
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.isTyping = false;
+                    if (data.conversation_id) {
+                        this.conversationId = data.conversation_id;
+                        localStorage.setItem('souly_ai_conversation_id', data.conversation_id);
+                    }
+
+                    if (data.visitor_name) {
+                        this.visitorName = data.visitor_name;
+                        if (window.SoulyIdentity) window.SoulyIdentity.setName(data.visitor_name);
+                        this.updateGreeting();
+                    }
+
+                    const replyText = (data.reply && data.reply.trim() !== '')
+                        ? data.reply
+                        : 'أهلاً بحضرتك في سولي 🌟 أنا سولي، مستشارك التقني الذكي.. كيف أقدر أساعدك اليوم؟';
+
+                    this.messages.push({
+                        sender: 'souly_ai',
+                        content: replyText
+                    });
+
+                    this.scrollToBottom();
+                })
+                .catch(() => {
+                    this.isTyping = false;
+                    this.messages.push({
+                        sender: 'souly_ai',
+                        content: 'عذراً، حدث خطأ مؤقت في الاتصال. يمكنك إعادة المحاولة أو التواصل معنا مباشرة عبر واتساب: 01090623326.'
+                    });
+                    this.scrollToBottom();
+                });
+            },
+
+            scrollToBottom() {
+                this.$nextTick(() => {
+                    const el = this.$refs.chatMessages;
+                    if (el) el.scrollTop = el.scrollHeight;
+                });
+            }
+        };
+    };
+
+    // Auto-register with Alpine if Alpine is already present or upon alpine:init
+    if (global.Alpine) {
+        global.Alpine.data('soulyAiWidgetController', global.soulyAiWidgetController);
+    } else {
+        document.addEventListener('alpine:init', () => {
+            if (global.Alpine) {
+                global.Alpine.data('soulyAiWidgetController', global.soulyAiWidgetController);
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         instance.init();
     });

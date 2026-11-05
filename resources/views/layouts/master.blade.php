@@ -316,6 +316,9 @@
 
     <script>
         document.addEventListener('alpine:init', () => {
+            if (window.soulyAiWidgetController) {
+                Alpine.data('soulyAiWidgetController', window.soulyAiWidgetController);
+            }
             Alpine.store('citadel', {
                 isMobile: window.innerWidth < 1024,
                 isOnline: navigator.onLine,

@@ -6,11 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\ClientDevice;
 use App\Models\ErpOrder;
+use App\Models\ErpOrderItem;
 use App\Models\HardwareOrder;
-use App\Models\Package;
 use App\Models\PromoCode;
 use App\Models\PromoCodeUsage;
 use App\Models\Service;
+use App\Models\ServicePackage;
 use App\Models\Setting;
 use App\Models\Ticket;
 use App\Models\TicketMessage;
@@ -23,9 +24,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ClientPortalController extends Controller
 {
@@ -292,7 +295,15 @@ class ClientPortalController extends Controller
         $bookings = $query->latest()->paginate(10);
         $totalCount = Booking::where('user_id', $user->id)->count();
 
-        return view('portal.bookings', compact('user', 'bookings', 'totalCount'));
+        // Pre-load active services and packages for interactive booking modal
+        $services = Service::where('is_active', true)
+            ->with(['packages' => fn ($q) => $q->where('is_active', true)->orderBy('display_order')])
+            ->orderBy('display_order')
+            ->get();
+
+        $wallet = $user->walletOrCreate();
+
+        return view('portal.bookings', compact('user', 'wallet', 'bookings', 'services', 'totalCount'));
     }
 
     /**
@@ -300,20 +311,27 @@ class ClientPortalController extends Controller
      */
     public function storeBooking(Request $request): RedirectResponse
     {
+        // Support both package_id and service_package_id
+        if ($request->filled('service_package_id') && !$request->filled('package_id')) {
+            $request->merge(['package_id' => $request->input('service_package_id')]);
+        }
+
         $validated = $request->validate([
-            'service_id'     => ['required', 'exists:services,id'],
-            'package_id'     => ['nullable', 'exists:packages,id'],
-            'scheduled_at'   => ['nullable', 'date', 'after_or_equal:today'],
-            'preferred_time' => ['nullable', 'string', 'max:50'],
-            'address'        => ['nullable', 'string', 'max:500'],
-            'payment_method' => ['required', 'in:cash,wallet,bank_transfer'],
-            'notes'          => ['nullable', 'string', 'max:1000'],
-            'promo_code'     => ['nullable', 'string', 'max:50'],
+            'service_id'         => ['required', 'exists:services,id'],
+            'package_id'         => ['nullable', 'exists:service_packages,id'],
+            'service_package_id' => ['nullable', 'exists:service_packages,id'],
+            'scheduled_at'       => ['nullable', 'date', 'after_or_equal:today'],
+            'preferred_time'     => ['nullable', 'string', 'max:50'],
+            'address'            => ['nullable', 'string', 'max:500'],
+            'payment_method'     => ['required', 'in:cash,wallet,bank_transfer'],
+            'notes'              => ['nullable', 'string', 'max:1000'],
+            'promo_code'         => ['nullable', 'string', 'max:50'],
         ]);
 
         $user = Auth::user();
         $service = Service::findOrFail($validated['service_id']);
-        $package = !empty($validated['package_id']) ? Package::findOrFail($validated['package_id']) : null;
+        $packageId = $validated['service_package_id'] ?? $validated['package_id'] ?? null;
+        $package = !empty($packageId) ? ServicePackage::findOrFail($packageId) : null;
 
         $isFieldVisit = in_array($service->sector, ['engineering_maintenance', 'cyber_shield'], true);
         if (!$isFieldVisit && ($request->filled('scheduled_at') || $request->filled('preferred_time'))) {
@@ -367,19 +385,19 @@ class ClientPortalController extends Controller
                 }
 
                 return Booking::create([
-                    'booking_number' => $bookingNumber,
-                    'user_id'        => $user->id,
-                    'service_id'     => $service->id,
-                    'package_id'     => $package?->id,
-                    'is_field_visit' => $isFieldVisit,
-                    'preferred_date' => $isFieldVisit ? ($validated['scheduled_at'] ?? null) : null,
-                    'preferred_time' => $isFieldVisit ? ($validated['preferred_time'] ?? null) : null,
-                    'address'        => $validated['address'] ?? null,
-                    'total_amount'   => $finalTotal,
-                    'status'         => 'new',
-                    'payment_status' => $paymentStatus,
-                    'payment_method' => $validated['payment_method'],
-                    'notes'          => $validated['notes'] ?? null,
+                    'booking_number'     => $bookingNumber,
+                    'user_id'            => $user->id,
+                    'service_id'         => $service->id,
+                    'service_package_id' => $package?->id,
+                    'is_field_visit'     => $isFieldVisit,
+                    'preferred_date'     => $isFieldVisit ? ($validated['scheduled_at'] ?? null) : null,
+                    'preferred_time'     => $isFieldVisit ? ($validated['preferred_time'] ?? null) : null,
+                    'address'            => $validated['address'] ?? null,
+                    'total_amount'       => $finalTotal,
+                    'status'             => 'new',
+                    'payment_status'     => $paymentStatus,
+                    'payment_method'     => $validated['payment_method'],
+                    'notes'              => $validated['notes'] ?? null,
                 ]);
             });
 
@@ -566,7 +584,35 @@ class ClientPortalController extends Controller
     {
         $user = Auth::user();
         $orders = ErpOrder::where('user_id', $user->id)->with('items')->latest()->get();
-        return view('portal.erp-store', compact('user', 'orders'));
+
+        $activeOrders = $orders->where('status', 'active');
+        $latestActiveOrder = $activeOrders->first();
+        $licenseKey = $latestActiveOrder?->license_key;
+        $hasActiveLicense = !empty($licenseKey);
+
+        $orderItems = ErpOrderItem::whereIn('order_id', $orders->pluck('id'))->get();
+        $hasCore = $orderItems->where('tier', 'core')->isNotEmpty();
+        $purchasedModules = $orderItems->where('tier', 'module');
+        $purchasedFeatures = $orderItems->where('tier', 'feature');
+
+        $powerMeter = 0;
+        if ($hasCore) {
+            $powerMeter += 35;
+        }
+        $powerMeter += min(45, $purchasedModules->count() * 10);
+        $powerMeter += min(20, $purchasedFeatures->count() * 5);
+        $powerMeter = min(100, $powerMeter);
+
+        return view('portal.erp-store', compact(
+            'user',
+            'orders',
+            'powerMeter',
+            'hasCore',
+            'hasActiveLicense',
+            'purchasedModules',
+            'purchasedFeatures',
+            'licenseKey'
+        ));
     }
 
     /**
@@ -585,5 +631,40 @@ class ClientPortalController extends Controller
     public function devices(): RedirectResponse
     {
         return redirect()->action([ClientDeviceController::class, 'index']);
+    }
+
+    /**
+     * Update client account profile and password.
+     */
+    public function updateProfile(Request $request): RedirectResponse|JsonResponse
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'name'         => ['required', 'string', 'max:255'],
+            'phone'        => ['required', 'string', 'max:50'],
+            'email'        => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'password'     => ['nullable', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if (!empty($validated['password'])) {
+            $validated['password'] = Hash::make($validated['password']);
+        } else {
+            unset($validated['password']);
+        }
+
+        $user->update($validated);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تحديث الملف الشخصي بنجاح',
+                'user'    => $user->fresh(),
+            ]);
+        }
+
+        return back()->with('success', 'تم تحديث الملف الشخصي بنجاح')
+                     ->with('citadel_toast', 'تم تحديث بيانات الحساب بنجاح ✓');
     }
 }

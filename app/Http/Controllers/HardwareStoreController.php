@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class HardwareStoreController extends Controller
 {
@@ -29,11 +30,12 @@ class HardwareStoreController extends Controller
     public static function getCategoriesList(): array
     {
         return [
-            'pos_equipment'       => 'نقاط البيع وأنظمة الكاشير POS',
-            'storage_ram'         => 'وسائط التخزين والذاكرة العشوائية RAM',
+            'pos_equipment'       => 'أجهزة كاشير ونقاط بيع',
+            'storage_ram'         => 'هاردات SSD ورامات فائقة السرعة',
+            'networking_security' => 'شبكات وبصمة وتدريع أمني',
+            'workstations'        => 'أجهزة ولابتوبات أعمال هندسية',
             'cooling_thermal'     => 'أنظمة التبريد والبطاريات المتقدمة',
             'networking_servers'  => 'السيرفرات ومعدات الشبكات المركزية',
-            'networking_security' => 'أجهزة جدران الحماية وأمن الشبكات',
             'cyber_security'      => 'أجهزة التدريع والتحصين السيبراني',
         ];
     }
@@ -43,44 +45,60 @@ class HardwareStoreController extends Controller
      */
     public function index(Request $request)
     {
-        // 1. Generate standard categories collection (supports both object and array access)
-        $categoriesList = self::getCategoriesList();
-        $categories = collect($categoriesList)->map(function ($name, $slug) {
-            return (object)[
-                'id'          => $slug,
-                'slug'        => $slug,
-                'name'        => $name,
-                'name_ar'     => $name,
-                'name_en'     => $slug,
-                'description' => $name,
-                'is_active'   => true,
-            ];
-        })->values();
+        $products = HardwareProduct::query()->where('is_active', true)->get();
 
-        // 2. Query active products
-        $query = HardwareProduct::query()->where('is_active', true);
+        $totalCount = $products->count();
+        $categories = [
+            [
+                'id'      => 'all',
+                'slug'    => 'all',
+                'name'    => 'كافة الأجهزة والمعدات',
+                'name_ar' => 'كافة الأجهزة والمعدات',
+                'icon'    => '📦',
+                'count'   => $totalCount,
+            ],
+            [
+                'id'      => 'pos_equipment',
+                'slug'    => 'pos_equipment',
+                'name'    => 'أجهزة كاشير ونقاط بيع',
+                'name_ar' => 'أجهزة كاشير ونقاط بيع',
+                'icon'    => '💳',
+                'count'   => $products->where('category', 'pos_equipment')->count(),
+            ],
+            [
+                'id'      => 'storage_ram',
+                'slug'    => 'storage_ram',
+                'name'    => 'هاردات SSD ورامات فائقة السرعة',
+                'name_ar' => 'هاردات SSD ورامات فائقة السرعة',
+                'icon'    => '⚡',
+                'count'   => $products->where('category', 'storage_ram')->count(),
+            ],
+            [
+                'id'      => 'networking_security',
+                'slug'    => 'networking_security',
+                'name'    => 'شبكات وبصمة وتدريع أمني',
+                'name_ar' => 'شبكات وبصمة وتدريع أمني',
+                'icon'    => '🛡️',
+                'count'   => $products->where('category', 'networking_security')->count(),
+            ],
+            [
+                'id'      => 'workstations',
+                'slug'    => 'workstations',
+                'name'    => 'أجهزة ولابتوبات أعمال هندسية',
+                'name_ar' => 'أجهزة ولابتوبات أعمال هندسية',
+                'icon'    => '💻',
+                'count'   => $products->where('category', 'workstations')->count(),
+            ],
+        ];
 
-        // Filter by category slug if provided
-        if ($request->filled('category') && $request->query('category') !== 'all') {
-            $selectedCategory = trim($request->query('category'));
-            $query->where('category', $selectedCategory);
+        $user = Auth::user();
+        $userWalletBalance = 0.00;
+        if ($user) {
+            $wallet = Wallet::where('user_id', $user->id)->first();
+            $userWalletBalance = $wallet ? (float) ($wallet->balance ?? $wallet->cash_balance ?? 0) : 0.00;
         }
 
-        // Search in product names, description, or model
-        if ($request->filled('search')) {
-            $term = trim($request->query('search'));
-            $query->where(function ($q) use ($term) {
-                $q->where('name_ar', 'like', "%{$term}%")
-                  ->orWhere('name_en', 'like', "%{$term}%")
-                  ->orWhere('description_ar', 'like', "%{$term}%")
-                  ->orWhere('model_number', 'like', "%{$term}%");
-            });
-        }
-
-        // Sorting & pagination
-        $products = $query->latest('id')->paginate(12);
-
-        return view('pages.hardware-store', compact('categories', 'products'));
+        return view('pages.store.hardware', compact('categories', 'products', 'userWalletBalance'));
     }
 
     /**
@@ -89,31 +107,46 @@ class HardwareStoreController extends Controller
      */
     public function checkout(Request $request)
     {
+        $user = Auth::user();
+        $customerName = $request->input('customer_name') ?? $request->input('name') ?? ($user?->name);
+        $customerPhone = $request->input('customer_phone') ?? $request->input('phone') ?? ($user?->phone);
+        $request->merge([
+            'customer_name'  => $customerName,
+            'customer_phone' => $customerPhone,
+            'name'           => $customerName,
+            'phone'          => $customerPhone,
+        ]);
+
+        $isAuth = Auth::check();
         $validated = $request->validate([
             'items'            => ['required', 'array', 'min:1'],
             'items.*.id'       => ['required', 'integer', 'exists:hardware_products,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:50'],
-            'name'             => ['required_without:user', 'nullable', 'string', 'max:150'],
-            'phone'            => ['required_without:user', 'nullable', 'string'],
+            'customer_name'    => [Rule::requiredIf(!$isAuth), 'nullable', 'string', 'max:150'],
+            'customer_phone'   => [Rule::requiredIf(!$isAuth), 'nullable', 'string'],
+            'name'             => ['nullable', 'string', 'max:150'],
+            'phone'            => ['nullable', 'string'],
             'email'            => ['nullable', 'email', 'max:190'],
             'company'          => ['nullable', 'string', 'max:150'],
             'shipping_address' => ['required', 'string', 'max:255'],
             'city'             => ['nullable', 'string', 'max:100'],
             'promo_code'       => ['nullable', 'string', 'max:50'],
-            'payment_method'   => ['required', 'in:cash_on_delivery,wallet,card,bank_transfer'],
+            'payment_method'   => ['required', 'in:cash_on_delivery,wallet,card,bank_transfer,transfer,cod_deposit'],
             'notes'            => ['nullable', 'string', 'max:500'],
         ]);
 
-        $user = Auth::user();
         $normalizedPhone = null;
 
         if (!$user) {
-            $normalizedPhone = $this->normalizeEgyptianPhone($validated['phone'] ?? null);
+            $normalizedPhone = $this->normalizeEgyptianPhone($validated['customer_phone'] ?? $validated['phone'] ?? null);
             if (!$this->isValidEgyptianPhone($normalizedPhone)) {
                 return response()->json(['success' => false, 'message' => 'رقم الهاتف المصري غير صحيح.'], 422);
             }
         } else {
-            $normalizedPhone = $user->phone;
+            $normalizedPhone = $this->normalizeEgyptianPhone($validated['customer_phone'] ?? $validated['phone'] ?? $user->phone ?? null);
+            if (!$normalizedPhone) {
+                $normalizedPhone = $user->phone ?? '01000000000';
+            }
         }
 
         try {
@@ -123,7 +156,7 @@ class HardwareStoreController extends Controller
                     $user = User::where('phone', $normalizedPhone)->first();
                     if (!$user) {
                         $user = User::create([
-                            'name'      => strip_tags(trim($validated['name'])),
+                            'name'      => strip_tags(trim($validated['customer_name'] ?? $validated['name'] ?? 'عميل سولي')),
                             'phone'     => $normalizedPhone,
                             'email'     => !empty($validated['email']) ? strtolower(trim($validated['email'])) : ('client_' . $normalizedPhone . '@soulyeg.online'),
                             'password'  => Hash::make(Str::random(16)),
@@ -133,6 +166,7 @@ class HardwareStoreController extends Controller
 
                         Wallet::create([
                             'user_id'       => $user->id,
+                            'balance'       => 0.00,
                             'cash_balance'  => 0.00,
                             'bonus_balance' => 0.00,
                             'currency'      => 'EGP',
@@ -179,15 +213,15 @@ class HardwareStoreController extends Controller
                     }
 
                     $lineItemsToCreate[] = [
-                        'hardware_product_id' => $product->id,
-                        'product_id'          => $product->id,
-                        'name_ar'             => $product->name_ar,
-                        'item_name'           => $product->name_ar,
-                        'unit_price'          => $unitPrice,
-                        'quantity'            => $qty,
-                        'total_price'         => $itemTotal,
-                        'subtotal'            => $itemTotal,
-                        'warranty_months'     => $product->warranty_months ?? 12,
+                        'product_id'   => $product->id,
+                        'product_sku'  => $product->sku ?? ('SKU-' . $product->id),
+                        'product_name' => $product->name_ar,
+                        'name_ar'      => $product->name_ar,
+                        'item_name'    => $product->name_ar,
+                        'unit_price'   => $unitPrice,
+                        'quantity'     => $qty,
+                        'subtotal'     => $itemTotal,
+                        'total_price'  => $itemTotal,
                     ];
                 }
 
@@ -213,45 +247,44 @@ class HardwareStoreController extends Controller
                     }
                 }
 
-                // Shipping cost
-                $shippingCost = 50.00;
+                $shippingCost = 0.00;
                 $finalPayable = max(0.00, round($subtotal - $discount + $shippingCost, 2));
 
                 $orderNumber = 'HW-' . date('ymd') . '-' . strtoupper(Str::random(5));
-                $paymentStatus = 'unpaid';
+                $isWallet = ($validated['payment_method'] === 'wallet');
+                $orderStatus = $isWallet ? 'confirmed_preparing' : 'pending_review';
+                $paymentStatus = $isWallet ? 'paid' : 'pending';
 
                 // 4. Handle wallet deduction if selected
-                if ($validated['payment_method'] === 'wallet') {
+                if ($isWallet) {
                     $wallet = Wallet::where('user_id', $user->id)
                         ->lockForUpdate()
                         ->first();
 
-                    if (!$wallet || $wallet->is_locked || (float)($wallet->cash_balance ?? $wallet->balance) < $finalPayable) {
-                        throw new \DomainException('رصيدك في المحفظة غير كافٍ لسداد قيمة طلب المعدات والشحن.');
+                    $walletBalance = (float)($wallet->balance ?? $wallet->cash_balance ?? 0);
+                    if (!$wallet || $wallet->is_locked || $walletBalance < $finalPayable) {
+                        throw new \DomainException('رصيدك في المحفظة غير كافٍ لسداد قيمة طلب المعدات.');
                     }
 
+                    $wallet->decrement('balance', $finalPayable);
                     if (isset($wallet->cash_balance)) {
                         $wallet->decrement('cash_balance', $finalPayable);
-                    } else {
-                        $wallet->decrement('balance', $finalPayable);
                     }
 
                     WalletTransaction::create([
-                        'wallet_id'   => $wallet->id,
-                        'user_id'     => $user->id,
-                        'type'        => 'payment',
-                        'amount'      => $finalPayable,
-                        'currency'    => 'EGP',
-                        'status'      => 'completed',
-                        'reference'   => $orderNumber,
-                        'description' => "سداد قيمة طلب أجهزة وهاردوير ({$orderNumber})",
+                        'wallet_id'       => $wallet->id,
+                        'user_id'         => $user->id,
+                        'type'            => 'purchase',
+                        'amount'          => $finalPayable,
+                        'reference_code'  => 'TXN-' . strtoupper(Str::random(12)),
+                        'payment_method'  => 'wallet_balance',
+                        'status'          => 'approved',
+                        'admin_notes'     => "سداد قيمة طلب أجهزة وهاردوير ({$orderNumber})",
                     ]);
-
-                    $paymentStatus = 'paid';
                 }
 
-                // 5. Create Hardware Order with robust field naming
-                $customerName = strip_tags(trim($validated['name'] ?? ($user->name ?? 'عميل سولي')));
+                // 5. Create Hardware Order
+                $customerName = strip_tags(trim($validated['customer_name'] ?? $validated['name'] ?? ($user->name ?? 'عميل سولي')));
                 $shippingAddress = strip_tags(trim($validated['shipping_address'] ?? ''));
 
                 $hardwareOrder = HardwareOrder::create([
@@ -259,27 +292,26 @@ class HardwareStoreController extends Controller
                     'user_id'          => $user->id,
                     'customer_name'    => $customerName,
                     'customer_phone'   => $normalizedPhone,
-                    'status'           => 'pending',
-                    'payment_status'   => $paymentStatus,
-                    'payment_method'   => $validated['payment_method'],
-                    'subtotal_amount'  => $subtotal,
-                    'discount_amount'  => $discount,
-                    'shipping_cost'    => $shippingCost,
-                    'total_amount'     => $finalPayable,
                     'shipping_address' => $shippingAddress,
-                    'city'             => strip_tags(trim($validated['city'] ?? '')),
                     'items_json'       => $lineItemsToCreate,
+                    'total_amount'     => $finalPayable,
+                    'payment_method'   => $validated['payment_method'],
+                    'payment_status'   => $paymentStatus,
+                    'status'           => $orderStatus,
                     'notes'            => !empty($validated['notes']) ? strip_tags(trim($validated['notes'])) : null,
                 ]);
 
-                // Create Order Line Items if model exists
+                // Create Order Line Items
                 foreach ($lineItemsToCreate as $lineItem) {
-                    $lineItem['hardware_order_id'] = $hardwareOrder->id;
-                    try {
-                        HardwareOrderItem::create($lineItem);
-                    } catch (\Throwable $itemEx) {
-                        // Suppressed if table structure only relies on items_json
-                    }
+                    HardwareOrderItem::create([
+                        'order_id'     => $hardwareOrder->id,
+                        'product_id'   => $lineItem['product_id'],
+                        'product_sku'  => $lineItem['product_sku'],
+                        'product_name' => $lineItem['product_name'],
+                        'unit_price'   => $lineItem['unit_price'],
+                        'quantity'     => $lineItem['quantity'],
+                        'subtotal'     => $lineItem['subtotal'],
+                    ]);
                 }
 
                 // 6. Sync CRM Lead
@@ -305,7 +337,9 @@ class HardwareStoreController extends Controller
                 'success'      => true,
                 'message'      => 'تم تسجيل طلب الشراء بنجاح وجارٍ تجهيز الشحنة.',
                 'order_number' => $order->order_number,
+                'status'       => $order->status,
                 'redirect'     => route('portal.index'),
+                'redirect_url' => route('portal.index'),
             ]);
 
         } catch (\DomainException $de) {
