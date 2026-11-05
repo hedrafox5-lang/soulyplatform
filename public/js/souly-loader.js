@@ -216,7 +216,7 @@
             }
 
             try {
-                if (localStorage.getItem('souly_story_seen')) {
+                if (localStorage.getItem('souly_story_seen') === 'true') {
                     return false;
                 }
             } catch (e) {}
@@ -229,7 +229,10 @@
 
             try {
                 if (window.SoulyDB) {
-                    const record = await window.SoulyDB.get('souly_loader_watched');
+                    const record = await Promise.race([
+                        window.SoulyDB.get('souly_loader_watched'),
+                        new Promise(resolve => setTimeout(() => resolve(null), 150))
+                    ]);
                     if (record && record.timestamp) {
                         try { localStorage.setItem('souly_story_seen', 'true'); } catch (e) {}
                         return false;
@@ -267,15 +270,8 @@
             this.dom.wrapper = document.getElementById('souly-cinematic-loader');
             if (!this.dom.wrapper) return;
 
-            const shouldShow = await this.shouldShowLoader();
-            if (!shouldShow) {
-                this.hideAndUnlock();
-                return;
-            }
-
-            document.documentElement.classList.remove('souly-loader-hidden');
-            this.dom.wrapper.style.display = 'flex';
-
+            this.dom.skipBtn = document.getElementById('loader-skip-btn');
+            this.dom.soundBtn = document.getElementById('loader-sound-toggle');
             this.dom.progressBar = document.getElementById('loader-progress-bar');
             this.dom.percentText = document.getElementById('loader-percent-text');
             this.dom.secondsText = document.getElementById('loader-seconds-text');
@@ -284,22 +280,46 @@
             this.dom.subtitle = document.getElementById('loader-chapter-subtitle');
             this.dom.metric = document.getElementById('loader-chapter-metric');
             this.dom.indicators = document.querySelectorAll('.loader-chapter-pill');
-            this.dom.soundBtn = document.getElementById('loader-sound-toggle');
-            this.dom.skipBtn = document.getElementById('loader-skip-btn');
 
+            // 1. Bind events synchronously and immediately so skip works instantly
+            this.bindEvents();
+
+            // 2. Check if loader should display
+            const shouldShow = await this.shouldShowLoader();
+            if (!shouldShow) {
+                this.hideAndUnlock();
+                return;
+            }
+
+            document.documentElement.classList.remove('souly-loader-hidden');
+            this.dom.wrapper.style.display = 'flex';
             document.body.classList.add('overflow-hidden');
 
-            this.bindEvents();
             this.startLoader();
         }
 
         bindEvents() {
-            if (this.dom.skipBtn) {
-                this.dom.skipBtn.addEventListener('click', (e) => {
+            if (this.eventsBound) return;
+            this.eventsBound = true;
+
+            const handleSkip = (e) => {
+                if (e) {
                     e.preventDefault();
-                    this.skip();
-                });
+                    e.stopPropagation();
+                }
+                this.skip();
+            };
+
+            if (this.dom.skipBtn) {
+                this.dom.skipBtn.addEventListener('click', handleSkip);
+                this.dom.skipBtn.addEventListener('touchend', handleSkip, { passive: false });
             }
+
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !this.isSkipped) {
+                    this.skip();
+                }
+            });
 
             if (this.dom.soundBtn) {
                 this.dom.soundBtn.addEventListener('click', (e) => {
@@ -473,8 +493,19 @@
     const loaderInstance = new SoulyCinematicLoaderManager();
     global.SoulyLoader = loaderInstance;
 
-    document.addEventListener('DOMContentLoaded', () => {
-        loaderInstance.init();
-    });
+    function bootLoader() {
+        try {
+            loaderInstance.init();
+        } catch(e) {
+            console.error('[SoulyLoader] Boot error:', e);
+            loaderInstance.hideAndUnlock();
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootLoader);
+    } else {
+        bootLoader();
+    }
 
 })(typeof window !== 'undefined' ? window : globalThis);

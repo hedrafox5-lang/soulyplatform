@@ -6,6 +6,36 @@
     }
 </style>
 <script>
+    window.soulyDismissIntro = function(e) {
+        if (e) {
+            try { e.preventDefault(); e.stopPropagation(); } catch(_) {}
+        }
+        try {
+            localStorage.setItem('souly_story_seen', 'true');
+            if (window.SoulyDB) {
+                window.SoulyDB.set('souly_loader_watched', { timestamp: Date.now(), version: '2.5' });
+            }
+        } catch(_) {}
+
+        if (window.SoulyLoader && typeof window.SoulyLoader.skip === 'function') {
+            window.SoulyLoader.skip();
+        } else {
+            document.documentElement.classList.add('souly-loader-hidden');
+            const el = document.getElementById('souly-cinematic-loader');
+            if (el) {
+                el.style.opacity = '0';
+                setTimeout(() => {
+                    el.style.display = 'none';
+                    if (el.parentNode) el.remove();
+                }, 200);
+            }
+            document.body.classList.remove('overflow-hidden');
+            if (window.SoulyUI && typeof window.SoulyUI.forceUnlockScroll === 'function') {
+                window.SoulyUI.forceUnlockScroll();
+            }
+        }
+    };
+
     (function() {
         try {
             const hasSeen = localStorage.getItem('souly_story_seen');
@@ -15,6 +45,14 @@
 
             if ((hasSeen || !isHome) && !forceReplay) {
                 document.documentElement.classList.add('souly-loader-hidden');
+            } else {
+                // Failsafe auto-dismiss timer: loader CANNOT freeze the page under any circumstance
+                setTimeout(() => {
+                    const el = document.getElementById('souly-cinematic-loader');
+                    if (el && !document.documentElement.classList.contains('souly-loader-hidden')) {
+                        window.soulyDismissIntro();
+                    }
+                }, 11500);
             }
         } catch(e) {
             document.documentElement.classList.add('souly-loader-hidden');
@@ -116,10 +154,11 @@
                 <span class="text-slate-400 hidden sm:inline">4 محطات حاسمة</span>
             </div>
 
-            <!-- Skip Button -->
+            <!-- Skip Button (Instant 0ms Dismissal) -->
             <button id="loader-skip-btn" 
                     type="button" 
-                    class="group flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-cyber-cyan/15 hover:bg-cyber-cyan text-cyber-cyan hover:text-obsidian-base border border-cyber-cyan/50 font-cairo font-black text-xs transition-all duration-200 active:scale-95 shadow-neon-cyan cursor-pointer">
+                    onclick="window.soulyDismissIntro && window.soulyDismissIntro(event)"
+                    class="group relative z-30 flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-cyber-cyan/15 hover:bg-cyber-cyan text-cyber-cyan hover:text-obsidian-base border border-cyber-cyan/50 font-cairo font-black text-xs transition-all duration-200 active:scale-95 shadow-neon-cyan cursor-pointer pointer-events-auto">
                 <span>تخطي العرض والبدء فوراً ⏭️</span>
                 <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />

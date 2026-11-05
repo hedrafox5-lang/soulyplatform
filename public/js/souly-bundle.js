@@ -8,7 +8,7 @@ import { SoulyModals } from './modules/souly-modals.js';
 import { SoulyCarousel } from './modules/souly-carousel.js';
 
 window.Souly = {
-    loader: SoulyLoader,
+    loader: window.SoulyLoader || SoulyLoader,
     storage: SoulyStorage,
     modals: SoulyModals,
     carousel: SoulyCarousel

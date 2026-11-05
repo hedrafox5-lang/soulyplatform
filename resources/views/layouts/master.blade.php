@@ -306,8 +306,9 @@
     <!-- GSAP 3.12 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
 
-    <!-- Souly Core Architecture Scripts (Storage & UI Engine v2.5) -->
+    <!-- Souly Core Architecture Scripts (Storage, Cinematic Loader & UI Engine v2.5) -->
     <script src="{{ asset('js/souly-storage.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/souly-loader.js') }}?v={{ time() }}"></script>
     <script src="{{ asset('js/souly-ui.js') }}?v={{ time() }}"></script>
 
     <!-- Alpine.js 3.14 CDN -->
