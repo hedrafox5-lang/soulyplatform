@@ -655,7 +655,7 @@
 
     <!-- Modern Modular Performance Scripts (Loaded at bottom with Cache Busting) -->
     <script src="{{ asset('js/souly-core.js') }}?v={{ time() }}" defer></script>
-    <script src="{{ asset('js/souly-bundle.js') }}?v={{ time() }}" defer></script>
+    <script type="module" src="{{ asset('js/souly-bundle.js') }}?v={{ time() }}"></script>
 
     @stack('scripts')
 </body>

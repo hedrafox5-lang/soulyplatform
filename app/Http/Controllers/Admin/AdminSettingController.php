@@ -286,4 +286,21 @@ class AdminSettingController extends Controller
             'Content-Type' => 'application/json',
         ]);
     }
+
+    /**
+     * Update WhatsApp Message Template from gear modal.
+     */
+    public function updateWhatsAppTemplate(Request $request): RedirectResponse
+    {
+        $this->authorizeAdmin();
+
+        $validated = $request->validate([
+            'template_key'     => ['required', 'string', 'max:100'],
+            'template_content' => ['required', 'string', 'max:2000'],
+        ]);
+
+        Setting::set($validated['template_key'], $validated['template_content'], 'whatsapp', 'قوالب رسائل الواتساب الدائمة');
+
+        return back()->with('citadel_toast', 'تم حفظ وتحديث قالب رسالة الواتساب بنجاح.');
+    }
 }

@@ -87,7 +87,7 @@ class SoulyAiKeyPoolService
 
         // Fallback to config keys if DB has no active keys
         if ($keys->isEmpty()) {
-            $fallbackRawKey = Setting::get('gemini_api_key_primary') ?: config('services.gemini.api_key_primary', 'AQ.Ab8RN6LuAZtSCNrgqDM-M77fxHlUb3y7Lanot0smOvbDQ0tKBQ');
+            $fallbackRawKey = Setting::get('gemini_api_key_primary') ?: config('services.gemini.api_key_primary', env('GEMINI_API_KEY_PRIMARY', ''));
             $fallbackKeyModel = new AiApiKey([
                 'label' => 'System Config Fallback',
                 'provider' => 'gemini',

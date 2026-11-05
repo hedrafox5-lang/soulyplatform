@@ -2,7 +2,7 @@
     sector: 'engineering_maintenance', 
     date: '{{ date('Y-m-d') }}', 
     slot: '10:00 ص - 01:00 م',
-    slots: ['10:00 ص - 01:00 م', '01:00 م - 04:00 م', '04:00 م - 07:00 م', '07:00 م - 10:00 م']
+    slots: ['10:00 ص - 01:00 م', '01:30 م - 04:30 م', '05:00 م - 08:00 م', '08:30 م - 11:30 م']
 }" class="w-full">
     <!-- Dual Sector Toggle -->
     <div class="flex items-center justify-center p-1 bg-slate-900/90 rounded-2xl border border-slate-800 mb-6">

@@ -36,18 +36,18 @@ class AdminPromoCodeController extends Controller
 
         PromoCode::create($validated);
 
-        return back()->with('citadel_toast', 'تم إنشاء كود الخصم بنجاح.');
+        return back()->with('citadel_toast', 'تم إنشاء كود الخصم الترويجي بنجاح.');
     }
 
     public function toggle(PromoCode $promoCode)
     {
         $promoCode->update(['is_active' => !$promoCode->is_active]);
-        return back()->with('citadel_toast', 'تم تحديث حالة كود الخصم.');
+        return back()->with('citadel_toast', 'تم تحديث حالة كود الخصم بنجاح.');
     }
 
     public function destroy(PromoCode $promoCode)
     {
         $promoCode->delete();
-        return back()->with('citadel_toast', 'تم حذف كود الخصم.');
+        return back()->with('citadel_toast', 'تم حذف كود الخصم بنجاح.');
     }
 }

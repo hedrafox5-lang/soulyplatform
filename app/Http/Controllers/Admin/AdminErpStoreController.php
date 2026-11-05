@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ErpCatalogItem;
+use App\Models\ErpCustomRequest;
 use App\Models\ErpOrder;
 use App\Models\ErpProposal;
+use App\Models\User;
 use App\Services\SoulyNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -17,8 +19,10 @@ class AdminErpStoreController extends Controller
         $catalog = ErpCatalogItem::latest()->get();
         $orders = ErpOrder::with('user')->latest()->paginate(15);
         $proposals = ErpProposal::latest()->paginate(10);
+        $customRequests = ErpCustomRequest::latest()->paginate(10);
+        $clients = User::where('is_active', true)->select('id', 'name', 'phone', 'email')->get();
 
-        return view('admin.erp.index', compact('catalog', 'orders', 'proposals'));
+        return view('admin.erp-store.index', compact('catalog', 'orders', 'proposals', 'customRequests', 'clients'));
     }
 
     public function toggleCatalogItem(ErpCatalogItem $item)
@@ -48,20 +52,85 @@ class AdminErpStoreController extends Controller
 
         $order->update([
             'status'      => $validated['status'],
-            'license_key' => $order->license_key ?? ('SOULY-MANUAL-' . strtoupper(Str::random(12))),
+            'license_key' => $order->license_key ?? ('SOULY-ERP-' . strtoupper(Str::random(12))),
             'expires_at'  => $order->expires_at ?? now()->addYear(),
         ]);
 
         if ($order->user && in_array($validated['status'], ['paid', 'active'])) {
             $notifier->notify(
                 $order->user,
-                'تم تفعيل ترخيص ERP الخاص بك',
+                'تم تفعيل ترخيص نظام ERP الخاص بك',
                 "تم تفعيل ترخيصك بنجاح. مفتاح الترخيص: {$order->license_key}",
                 route('portal.erp_store')
             );
         }
 
-        return back()->with('citadel_toast', 'تم تحديث حالة طلب وترخيص الـ ERP.');
+        return back()->with('citadel_toast', 'تم تحديث حالة طلب وترخيص الـ ERP بنجاح.');
+    }
+
+    public function issueManualLicense(Request $request, SoulyNotificationService $notifier)
+    {
+        $validated = $request->validate([
+            'user_id'    => ['required', 'exists:users,id'],
+            'tier'       => ['required', 'string'],
+            'price'      => ['required', 'numeric', 'min:0'],
+            'modules'    => ['nullable', 'array'],
+            'valid_days' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        $licenseKey = 'SOULY-MANUAL-' . strtoupper(Str::random(12));
+        $validDays = (int)($validated['valid_days'] ?? 365);
+
+        $order = ErpOrder::create([
+            'order_number'    => 'ERP-' . date('ymd') . '-' . strtoupper(Str::random(4)),
+            'user_id'         => $validated['user_id'],
+            'tier'            => $validated['tier'],
+            'total_amount'    => $validated['price'],
+            'payment_status'  => 'paid',
+            'status'          => 'active',
+            'license_key'     => $licenseKey,
+            'modules_json'    => $validated['modules'] ?? [],
+            'expires_at'      => now()->addDays($validDays),
+        ]);
+
+        $user = User::find($validated['user_id']);
+        if ($user) {
+            $notifier->notify(
+                $user,
+                'تم إصدار ترخيص ERP جديد لحسابك',
+                "تم إصدار ترخيص نظام BrandERP بنجاح. مفتاح الترخيص: {$licenseKey}",
+                route('portal.erp_store')
+            );
+        }
+
+        return back()->with('citadel_toast', "تم إصدار الترخيص اليدوي بنجاح: {$licenseKey}");
+    }
+
+    public function replyCustomRequest(Request $request, ErpCustomRequest $customRequest, SoulyNotificationService $notifier)
+    {
+        $validated = $request->validate([
+            'admin_response' => ['required', 'string', 'max:2000'],
+            'status'         => ['required', 'in:pending,reviewed,accepted,rejected'],
+            'quoted_price'   => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $customRequest->update([
+            'admin_response' => $validated['admin_response'],
+            'status'         => $validated['status'],
+            'quoted_price'   => $validated['quoted_price'] ?? $customRequest->quoted_price,
+            'replied_at'     => now(),
+        ]);
+
+        if ($customRequest->user) {
+            $notifier->notify(
+                $customRequest->user,
+                'رد جديد على طلب تخصيص ERP الخاص بك',
+                "تمت مراجعة طلبك وإضافة رد من فريق الهندسة: " . Str::limit($validated['admin_response'], 60),
+                route('portal.erp_store')
+            );
+        }
+
+        return back()->with('citadel_toast', 'تم تسجيل الرد على طلب التخصيص وإشعار العميل.');
     }
 
     public function sendProposal(Request $request, SoulyNotificationService $notifier)

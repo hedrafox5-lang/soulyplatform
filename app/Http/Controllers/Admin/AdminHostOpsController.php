@@ -89,6 +89,11 @@ class AdminHostOpsController extends Controller
         }
     }
 
+    public function runArtisanCommand(Request $request)
+    {
+        return $this->executeCommand($request);
+    }
+
     /**
      * View recent application logs.
      */
@@ -164,6 +169,11 @@ class AdminHostOpsController extends Controller
             Log::error('DB Backup Failed: ' . $e->getMessage());
             return back()->with('error', 'فشل أخذ النسخة الاحتياطية: ' . $e->getMessage());
         }
+    }
+
+    public function backupDatabase()
+    {
+        return $this->createDatabaseBackup();
     }
 
     /**

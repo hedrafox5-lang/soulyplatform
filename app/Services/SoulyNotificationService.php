@@ -23,7 +23,6 @@ class SoulyNotificationService
                 return 0;
             }
 
-            // التأكد أولاً من وجود جدول notifications أو إشعارات المستخدمين لتفادي أي خطأ بقاعدة البيانات
             if (class_exists(Notification::class) && Schema::hasTable('notifications')) {
                 return (int) Notification::where('user_id', $targetUserId)
                     ->where(function ($query) {
@@ -33,7 +32,6 @@ class SoulyNotificationService
                     ->count();
             }
 
-            // فحص جدول إشعارات لارافيل الافتراضي إذا كان مستخدماً
             $user = Auth::user();
             if ($user && method_exists($user, 'unreadNotifications')) {
                 return (int) $user->unreadNotifications()->count();
@@ -41,7 +39,6 @@ class SoulyNotificationService
 
             return 0;
         } catch (\Throwable $e) {
-            // صامت تماماً حتى لا تنهار واجهة الموقع
             return 0;
         }
     }
@@ -77,7 +74,7 @@ class SoulyNotificationService
     }
 
     /**
-     * إرسال إشعار فوري وتخزينه
+     * إرسال إشعار فوري وتخزينه في جدول الإشعارات
      */
     public function send(User $user, string $title, string $message, string $type = 'info', ?string $actionUrl = null): bool
     {
@@ -98,6 +95,30 @@ class SoulyNotificationService
             Log::error('SoulyNotificationService Error: ' . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * إرسال إشعار مرن يدعم الترتيب القياسي والتبادلي للبارامترات
+     */
+    public function notify($first, $second = null, $third = null, $fourth = null, $fifth = 'info'): bool
+    {
+        // إذا كان البارامتر الأول هو كائن User
+        if ($first instanceof User) {
+            return $this->send($first, (string)$second, (string)$third, (string)($fifth ?: 'info'), $fourth);
+        }
+
+        // إذا كان البارامتر الثالث هو كائن User: notify('title', 'message', $user)
+        if ($third instanceof User) {
+            return $this->send($third, (string)$first, (string)$second, (string)($fifth ?: 'info'), $fourth);
+        }
+
+        // المستخدم المسجل حالياً كخيار احتياطي
+        $currentUser = Auth::user();
+        if ($currentUser) {
+            return $this->send($currentUser, (string)$first, (string)$second, (string)($fifth ?: 'info'), $third);
+        }
+
+        return false;
     }
 
     /**

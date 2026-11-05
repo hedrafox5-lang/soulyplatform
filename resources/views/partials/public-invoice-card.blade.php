@@ -1,4 +1,4 @@
-<div class="max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl text-right text-slate-200 print:bg-white print:text-black print:border-none print:shadow-none">
+<div class="max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl text-right text-slate-200 print:bg-white print:text-black print:border-none print:shadow-none">
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-slate-800 pb-5 mb-5 print:border-gray-300">
         <div class="text-left font-mono">
@@ -37,7 +37,7 @@
             <tr>
                 <td class="py-2.5 font-medium text-white print:text-black">{{ $item->item_name }}</td>
                 <td class="py-2.5 text-center">{{ $item->quantity }}</td>
-                <td class="py-2.5 text-left font-mono font-bold">{{ number_format($item->subtotal, 2) }} ج.م</td>
+                <td class="py-2.5 text-left font-mono font-bold">{{ number_format($item->total_price, 2) }} ج.م</td>
             </tr>
             @endforeach
         </tbody>
@@ -49,13 +49,31 @@
         <span class="text-lg font-black font-mono text-cyan-400 print:text-black">{{ number_format($invoice->total_amount, 2) }} ج.م</span>
     </div>
 
-    <!-- Action -->
-    <div class="flex items-center justify-between pt-3 border-t border-slate-800 print:hidden">
-        <button onclick="window.print()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white rounded-xl transition-all">
-            🖨️ طباعة الفاتورة
-        </button>
-        <div class="text-[11px] text-slate-500 font-mono">
-            رابط التحقق: {{ route('invoice.verify', $invoice->hash_id) }}
+    <!-- Warranties Section -->
+    @if($invoice->warranties->isNotEmpty())
+    <div class="bg-amber-950/20 border border-amber-800/40 rounded-2xl p-4 text-xs space-y-2 mb-5">
+        <span class="font-bold text-amber-400 flex items-center gap-1.5">
+            <span>🛡️ شهادات الضمان المعتمدة المرفقة بالفاتورة:</span>
+        </span>
+        <ul class="space-y-1 text-slate-300">
+            @foreach($invoice->warranties as $war)
+            <li class="flex items-center justify-between font-mono text-[11px]">
+                <span>{{ $war->product_or_service_name }}</span>
+                <span class="text-amber-300">#{{ $war->certificate_number }} (ساري حتى {{ $war->expires_at->format('Y-m-d') }})</span>
+            </li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
+    <!-- QR & Verification Code -->
+    <div class="border-t border-slate-800 pt-4 flex items-center justify-between text-[11px] text-slate-500 font-mono">
+        <div>
+            <span>HASH ID: </span>
+            <span class="text-slate-400 select-all">{{ substr($invoice->hash_id, 0, 16) }}...</span>
+        </div>
+        <div>
+            <span>منظومة الفوترة الإلكترونية © سولي Citadel</span>
         </div>
     </div>
 </div>

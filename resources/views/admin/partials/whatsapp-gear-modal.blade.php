@@ -9,7 +9,7 @@
         <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
             <span class="text-xs font-mono text-cyan-400 bg-cyan-950/60 px-2.5 py-1 rounded-lg border border-cyan-800/40" x-text="key"></span>
             <h3 class="text-base font-bold text-white flex items-center gap-2">
-                <span>تعديل قالب الواتساب</span> ⚙️
+                <span>تعديل قالب رسائل الواتساب الدائمة</span> ⚙️
             </h3>
         </div>
 
@@ -26,14 +26,20 @@
 
             <!-- Variables Helper -->
             <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800/60 text-[11px] text-slate-400 space-y-1">
-                <span class="text-amber-400 font-bold block">المتغيرات الذكية المدعومة:</span>
-                <code>{name}</code> اسم العميل | <code>{invoice_number}</code> رقم الفاتورة | <code>{total_amount}</code> المبلغ | <code>{invoice_url}</code> رابط الفاتورة
+                <span class="text-amber-400 font-bold block">المتغيرات الذكية المدعومة تلقائياً:</span>
+                <code>{name}</code> اسم العميل | <code>{invoice_number}</code> رقم الفاتورة | <code>{total_amount}</code> المبلغ | <code>{invoice_url}</code> رابط الفاتورة والضمان
             </div>
 
             <!-- Actions -->
-            <div class="flex items-center justify-end gap-2 pt-2">
-                <button type="button" @click="open = false" class="px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white">إلغاء</button>
-                <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition-all shadow-lg shadow-cyan-500/20">حفظ القالب</button>
+            <div class="flex items-center justify-between pt-2">
+                <button type="button" @click="open = false" 
+                    class="px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white transition-colors">
+                    إلغاء
+                </button>
+                <button type="submit" 
+                    class="px-5 py-2.5 rounded-xl text-xs font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition-all shadow-lg shadow-cyan-500/20">
+                    حفظ القالب الدائم
+                </button>
             </div>
         </form>
     </div>

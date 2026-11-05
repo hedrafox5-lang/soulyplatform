@@ -38,6 +38,25 @@ class AdminBookingController extends Controller
     }
 
     /**
+     * Update booking general details.
+     */
+    public function update(Request $request, Booking $booking)
+    {
+        $validated = $request->validate([
+            'status'         => ['nullable', 'string', 'max:50'],
+            'stage'          => ['nullable', 'string', 'max:50'],
+            'preferred_date' => ['nullable', 'date'],
+            'preferred_time' => ['nullable', 'string', 'max:100'],
+            'total_amount'   => ['nullable', 'numeric', 'min:0'],
+            'admin_notes'    => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $booking->update(array_filter($validated, fn($val) => !is_null($val)));
+
+        return back()->with('citadel_toast', 'تم تحديث بيانات الحجز بنجاح.');
+    }
+
+    /**
      * Assign engineer or field technician to booking.
      */
     public function assignEngineer(Request $request, Booking $booking, SoulyNotificationService $notifier)
@@ -54,12 +73,39 @@ class AdminBookingController extends Controller
         ]);
 
         $notifier->notify(
-            'تكليف بزيارة ميدانية حديدة',
-            "tm tklefkb al-zyara rqm: {booking->booking_number}",
-            $engineer
+            $engineer,
+            'تكليف بزيارة ميدانية جديدة',
+            "تم تكليفك بالزيارة الميدانية رقم #{$booking->booking_number} للعميل {$booking->name}",
+            route('admin.bookings.index')
         );
 
-        return back()->with('citadel_toast', 'تم تكليف المهندس المختص٨ بنجاح.');
+        return back()->with('citadel_toast', 'تم تكليف المهندس المختص بنجاح.');
+    }
+
+    /**
+     * Toggle phone confirmation status.
+     */
+    public function toggleCallConfirmed(Booking $booking)
+    {
+        $booking->update([
+            'call_confirmed' => !$booking->call_confirmed,
+        ]);
+
+        return back()->with('citadel_toast', 'تم تحديث حالة تأكيد الاتصال الهاتفي.');
+    }
+
+    /**
+     * Update booking pipeline stage.
+     */
+    public function updateStage(Request $request, Booking $booking)
+    {
+        $validated = $request->validate([
+            'stage' => ['required', 'string', 'max:50'],
+        ]);
+
+        $booking->update(['stage' => $validated['stage']]);
+
+        return back()->with('citadel_toast', 'تم تحديث مرحلة الحجز الميداني بنجاح.');
     }
 
     /**
@@ -72,7 +118,7 @@ class AdminBookingController extends Controller
             'visit_started_at' => now(),
         ]);
 
-        return back()->with('citadel_toast', 'تم تسجيل بدء الزيارة الميدانية.');
+        return back()->with('citadel_toast', 'تم تسجيل بدء الزيارة الميدانية وتشغيل العداد.');
     }
 
     /**
@@ -83,7 +129,7 @@ class AdminBookingController extends Controller
         $validated = $request->validate([
             'parts_cost'       => ['nullable', 'numeric', 'min:0'],
             'parts_notes'      => ['nullable', 'string', 'max:500'],
-            'technician_notes' => [(nullable', 'string', 'max:1000'],
+            'technician_notes' => ['nullable', 'string', 'max:1000'],
             'warranty_months'  => ['nullable', 'integer', 'min:0'],
         ]);
 
@@ -102,58 +148,71 @@ class AdminBookingController extends Controller
 
                 $invoice = Invoice::create([
                     'invoice_number' => 'INV-' . date('ymd') . '-' . strtoupper(Str::random(4)),
-                    'user_id'        => $booking->user_id,
-                    'client_name'    => $booking->name,
-                    'client_phone'   => $booking->phone,
+                    'user_id'        => $booking->user_id ?? 1,
+                    'client_name'    => $booking->name ?? 'عميل سولي',
+                    'client_phone'   => $booking->phone ?? '01000000000',
                     'client_email'   => $booking->email,
+                    'subtotal'       => $serviceCost,
                     'total_amount'   => $grandTotal,
                     'payment_status' => ($booking->payment_status === 'paid' && $partsCost <= 0) ? 'paid' : 'unpaid',
                     'payment_method' => $booking->payment_method ?? 'cash',
+                    'source_type'    => 'field_service',
+                    'source_id'      => $booking->id,
                     'hash_id'        => (string)Str::uuid(),
                 ]);
 
                 InvoiceItem::create([
                     'invoice_id'      => $invoice->id,
-                    'item_name'       => $booking->service?->name_ar ?? 'خدمة ميداني�',
-                    'item_type'       => 'service',
+                    'item_name'       => $booking->service?->name_ar ?? 'زيارة صيانة ميدانية معتمدة',
                     'quantity'        => 1,
                     'unit_price'      => $serviceCost,
-                    'subtotal'        => $serviceCost,
-                    'warranty_months' => (int)($validated['warranty_months'] ?? 3),
+                    'total_price'     => $serviceCost,
+                    'warranty_days'   => ((int)($validated['warranty_months'] ?? 3)) * 30,
+                    'warranty_policy' => 'صيانة وضمان مجاني ضد عيوب التركيب والتشغيل',
                 ]);
 
                 if ($partsCost > 0) {
                     InvoiceItem::create([
                         'invoice_id'      => $invoice->id,
-                        'item_name'       => 'qta gyar: ' . ($validated['parts_notes'] ?? 'seyana'),
-                        'item_type'       => 'hardware',
+                        'item_name'       => 'قطع غيار ومستلزمات صيانة: ' . ($validated['parts_notes'] ?? 'قطع غيار أصلية'),
                         'quantity'        => 1,
                         'unit_price'      => $partsCost,
-                        'subtotal'        => $partsCost,
-                        'warranty_months' => (int)($validated['warranty_months'] ?? 6),
+                        'total_price'     => $partsCost,
+                        'warranty_days'   => ((int)($validated['warranty_months'] ?? 6)) * 30,
+                        'warranty_policy' => 'ضمان استبدال قطع الغيار المعتمدة',
                     ]);
                 }
 
                 $warrantyMonths = (int)($validated['warranty_months'] ?? 3);
                 if ($warrantyMonths > 0) {
                     Warranty::create([
-                        'invoice_id'     => $invoice->id,
-                        'user_id'        => $booking->user_id,
-                        'item_title'     => $booking->service?->name_ar ?? 'أمانة',
-                        'warranty_code'  => 'WAR-' . date('ymd') . '-' . strtoupper(Str::random(4)),
-                        'starts_at'      => now(),
-                        'expires_at'     => now()->addMonths($warrantyMonths),
-                        'status'         => 'active',
-                        'terms'          => 'Daman moatmad.',
+                        'certificate_number'      => 'WAR-' . date('ymd') . '-' . strtoupper(Str::random(4)),
+                        'invoice_id'              => $invoice->id,
+                        'user_id'                 => $booking->user_id ?? 1,
+                        'product_or_service_name' => $booking->service?->name_ar ?? 'صيانة ميدانية معتمدة',
+                        'coverage_type'           => 'repair',
+                        'starts_at'               => now(),
+                        'expires_at'              => now()->addMonths($warrantyMonths),
+                        'status'                  => 'active',
+                        'terms_and_conditions'    => 'شهادة ضمان رقمية معتمدة من منصة سولي للتكنولوجيا.',
                     ]);
+                }
+
+                if ($booking->user) {
+                    $notifier->notify(
+                        $booking->user,
+                        'اكتمال الزيارة الميدانية',
+                        "تم اكتمال الزيارة الميدانية رقم #{$booking->booking_number} وإصدار الفاتورة الإلكترونية والضمان.",
+                        route('portal.bookings.index')
+                    );
                 }
             });
 
-            return back()->with('citadel_toast', 'تم إنها؁ الزيارة وإصٯار ام�اتورة والضمان.');
+            return back()->with('citadel_toast', 'تم إنهاء الزيارة وإصدار الفاتورة الإلكترونية والضمان بنجاح.');
 
         } catch (\Throwable $e) {
             Log::error('Complete Visit Error: ' . $e->getMessage());
-            return back()->with('error', 'حدغ خطأ أثناء حفظ بيانات إنهاء الزيارة.');
+            return back()->with('error', 'حدث خطأ أثناء حفظ بيانات إنهاء الزيارة: ' . $e->getMessage());
         }
     }
 }

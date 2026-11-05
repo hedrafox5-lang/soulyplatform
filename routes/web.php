@@ -46,6 +46,10 @@ Route::match(['get', 'post'], '/run-souly-deploy-now', function (\Illuminate\Htt
     return app(DeployController::class)->run($request);
 })->name('deploy.run');
 
+Route::match(['get', 'post'], '/deploy', function (\Illuminate\Http\Request $request) {
+    return redirect()->route('deploy.run', $request->all());
+});
+
 // Web-Based Artisan Runner for Migrations & Optimizations (Protected)
 Route::match(['get', 'post'], '/run-souly-artisan', function (\Illuminate\Http\Request $request) {
     $secret = config('app.deploy_secret', env('DEPLOY_SECRET'));
@@ -382,11 +386,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/settings/sync-pinecone', [AdminSettingController::class, 'syncPinecone'])->name('settings.sync_pinecone');
 
         // Host Operations Center (Protected Artisan & Log Viewer)
+        Route::match(['get', 'post'], '/deploy', [DeployController::class, 'run'])->name('deploy');
         Route::prefix('host-ops')->name('host_ops.')->group(function () {
             Route::get('/', [AdminHostOpsController::class, 'index'])->name('index');
             Route::post('/run', [AdminHostOpsController::class, 'runArtisanCommand'])->name('run');
+            Route::get('/logs', [AdminHostOpsController::class, 'viewLogs'])->name('view_logs');
             Route::post('/clear-logs', [AdminHostOpsController::class, 'clearLogs'])->name('clear_logs');
             Route::post('/backup', [AdminHostOpsController::class, 'backupDatabase'])->name('backup');
+            Route::get('/backup/download/{fileName}', [AdminHostOpsController::class, 'downloadBackup'])->name('download_backup');
         });
 
         // BrandERP Store, Orders & Custom Requests Center

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
@@ -27,13 +28,20 @@ class AdminWalletController extends Controller
         $totalCash = Wallet::sum('cash_balance');
         $totalBonus = Wallet::sum('bonus_balance');
 
-        return view('admin.wallets.index', compact('pendingDeposits', 'totalCash', 'totalBonus'));
+        $gatewaySettings = [
+            'vodafone_cash_number' => Setting::get('vodafone_cash_number', '01000000000'),
+            'instapay_handle'      => Setting::get('instapay_handle', 'souly@instapay'),
+            'bank_account_iban'    => Setting::get('bank_account_iban', 'EG00000000000000000000000'),
+            'bank_name'            => Setting::get('bank_name', 'البنك الأهلي المصري'),
+        ];
+
+        return view('admin.wallets.index', compact('pendingDeposits', 'totalCash', 'totalBonus', 'gatewaySettings'));
     }
 
     /**
      * Approve manual deposit receipt with atomic row lock.
      */
-    public function approveDeposit(Request $request, WalletTransaction $transaction, SoulyNotificationService $notifier)
+    public function approve(Request $request, WalletTransaction $transaction, SoulyNotificationService $notifier)
     {
         if ($transaction->status !== 'pending' || $transaction->type !== 'deposit') {
             return back()->with('error', 'هذه المعاملة ليست قيد الانتظار أو تمت معالجتها مسبقاً.');
@@ -72,29 +80,36 @@ class AdminWalletController extends Controller
         }
     }
 
+    public function approveDeposit(Request $request, WalletTransaction $transaction, SoulyNotificationService $notifier)
+    {
+        return $this->approve($request, $transaction, $notifier);
+    }
+
     /**
      * Reject manual deposit receipt.
      */
-    public function rejectDeposit(Request $request, WalletTransaction $transaction, SoulyNotificationService $notifier)
+    public function reject(Request $request, WalletTransaction $transaction, SoulyNotificationService $notifier)
     {
         $validated = $request->validate([
-            'reason' => ['required', 'string', 'max:255'],
+            'reason' => ['nullable', 'string', 'max:255'],
         ]);
 
         if ($transaction->status !== 'pending') {
             return back()->with('error', 'تمت معالجة هذه المعاملة مسبقاً.');
         }
 
+        $reason = $validated['reason'] ?? 'لم يتم استلام المبلغ في الحساب البنكي أو المحفظة';
+
         $transaction->update([
             'status' => 'rejected',
-            'notes'  => $validated['reason'],
+            'notes'  => $reason,
         ]);
 
         if ($transaction->user) {
             $notifier->notify(
                 $transaction->user,
                 'تم رفض إيصال الإيداع',
-                "تم رفض الإيصال للسبب التالي: {$validated['reason']}",
+                "تم رفض الإيصال للسبب التالي: {$reason}",
                 route('portal.wallet')
             );
         }
@@ -102,15 +117,20 @@ class AdminWalletController extends Controller
         return back()->with('citadel_toast', 'تم رفض الإيصال وإشعار العميل.');
     }
 
+    public function rejectDeposit(Request $request, WalletTransaction $transaction, SoulyNotificationService $notifier)
+    {
+        return $this->reject($request, $transaction, $notifier);
+    }
+
     /**
      * Grant conditional promotional bonus balance to a user.
      */
-    public function grantBonus(Request $request, SoulyNotificationService $notifier)
+    public function chargeBonusGift(Request $request, SoulyNotificationService $notifier)
     {
         $validated = $request->validate([
             'user_id' => ['required', 'exists:users,id'],
             'amount'  => ['required', 'numeric', 'min:1'],
-            'reason'  => ['required', 'string', 'max:255'],
+            'reason'  => ['nullable', 'string', 'max:255'],
         ]);
 
         try {
@@ -123,6 +143,8 @@ class AdminWalletController extends Controller
                 $lockedWallet = Wallet::where('id', $wallet->id)->lockForUpdate()->first();
                 $lockedWallet->increment('bonus_balance', (float)$validated['amount']);
 
+                $reason = $validated['reason'] ?? 'مكافأة ولاء ترويجية خاصة';
+
                 WalletTransaction::create([
                     'wallet_id'   => $lockedWallet->id,
                     'user_id'     => $validated['user_id'],
@@ -131,7 +153,7 @@ class AdminWalletController extends Controller
                     'currency'    => 'EGP',
                     'status'      => 'completed',
                     'reference'   => 'BONUS-' . strtoupper(Str::random(6)),
-                    'description' => "مكافأة ولاء ترويجية: {$validated['reason']}",
+                    'description' => "مكافأة ولاء ترويجية: {$reason}",
                 ]);
 
                 $user = User::find($validated['user_id']);
@@ -149,5 +171,31 @@ class AdminWalletController extends Controller
         } catch (\Throwable $e) {
             return back()->with('error', 'حدث خطأ: ' . $e->getMessage());
         }
+    }
+
+    public function grantBonus(Request $request, SoulyNotificationService $notifier)
+    {
+        return $this->chargeBonusGift($request, $notifier);
+    }
+
+    /**
+     * Update manual payment receiving gateways numbers & handles.
+     */
+    public function updateGateways(Request $request)
+    {
+        $validated = $request->validate([
+            'vodafone_cash_number' => ['nullable', 'string', 'max:50'],
+            'instapay_handle'      => ['nullable', 'string', 'max:100'],
+            'bank_account_iban'    => ['nullable', 'string', 'max:100'],
+            'bank_name'            => ['nullable', 'string', 'max:150'],
+        ]);
+
+        foreach ($validated as $key => $val) {
+            if (!is_null($val)) {
+                Setting::set($key, $val, 'payment', 'إعدادات استقبال مدفوعات المحفظة');
+            }
+        }
+
+        return back()->with('citadel_toast', 'تم تحديث بيانات بوابات الاستقبال اليدوي بنجاح.');
     }
 }

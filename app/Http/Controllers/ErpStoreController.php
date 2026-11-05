@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\ErpCatalogItem;
 use App\Models\ErpOrder;
 use App\Models\ErpOrderItem;
+use App\Models\ErpStoreCatalog;
+use App\Models\ErpWishlist;
 use App\Models\Lead;
 use App\Models\PromoCode;
 use App\Models\User;
@@ -28,13 +30,57 @@ class ErpStoreController extends Controller
      */
     public function index(Request $request)
     {
-        $catalogItems = ErpCatalogItem::where('is_active', true)
-            ->orderBy('sort_order', 'asc')
-            ->get();
+        $coreItem = ErpStoreCatalog::where('tier', 'core')->where('is_active', true)->first();
+        $modules  = ErpStoreCatalog::where('tier', 'module')->where('is_active', true)->orderBy('display_order', 'asc')->get();
+        $features = ErpStoreCatalog::where('tier', 'feature')->where('is_active', true)->orderBy('display_order', 'asc')->get();
+        $bundles  = ErpStoreCatalog::where('tier', 'bundle')->where('is_active', true)->orderBy('display_order', 'asc')->get();
 
-        $departments = $catalogItems->pluck('department_ar')->unique()->filter()->values();
+        $flashDeal = ErpStoreCatalog::where('tier', 'feature')->where('is_flash_deal', true)->where('is_active', true)->first()
+            ?? $features->first();
 
-        return view('pages.erp-store', compact('catalogItems', 'departments'));
+        $departments = ErpStoreCatalog::where('tier', 'feature')
+            ->where('is_active', true)
+            ->pluck('department_ar')
+            ->unique()
+            ->filter()
+            ->values();
+
+        $industries = [
+            ['id' => 'all', 'name' => 'جميع الأنشطة', 'icon' => '🌐'],
+            ['id' => 'supermarket', 'name' => 'سوبرماركت وهايبر ماركت', 'icon' => '🛒'],
+            ['id' => 'pharmacy', 'name' => 'صيدليات ومستودعات أدوية', 'icon' => '💊'],
+            ['id' => 'restaurants', 'name' => 'مطاعم وكافيهات وكافتيريا', 'icon' => '🍽️'],
+            ['id' => 'manufacturing', 'name' => 'مصانع وورش تصنيع', 'icon' => '🏭'],
+            ['id' => 'retail_clothing', 'name' => 'محلات ملابس وأحذية', 'icon' => '👔'],
+            ['id' => 'services_clinics', 'name' => 'عيادات ومراكز طبية وخدمات', 'icon' => '🩺'],
+        ];
+
+        $userWishlistIds = [];
+        $userActiveTrialItemIds = [];
+
+        if (Auth::check()) {
+            $userId = Auth::id();
+            $userWishlistIds = ErpWishlist::where('user_id', $userId)->pluck('catalog_item_id')->toArray();
+            $userActiveTrialItemIds = DB::table('erp_order_items')
+                ->join('erp_orders', 'erp_order_items.erp_order_id', '=', 'erp_orders.id')
+                ->where('erp_orders.user_id', $userId)
+                ->where('erp_orders.is_trial', true)
+                ->where('erp_orders.status', 'active')
+                ->pluck('erp_order_items.erp_catalog_item_id')
+                ->toArray();
+        }
+
+        return view('pages.store.branderp', compact(
+            'coreItem',
+            'modules',
+            'features',
+            'bundles',
+            'flashDeal',
+            'departments',
+            'industries',
+            'userWishlistIds',
+            'userActiveTrialItemIds'
+        ));
     }
 
     /**
@@ -360,6 +406,60 @@ class ErpStoreController extends Controller
             'item_name'   => $orderItem->name_ar,
             'license_key' => $order->license_key,
             'download_at' => now()->toDateTimeString(),
+        ]);
+    }
+
+    /**
+     * Toggle item in client ERP wishlist.
+     */
+    public function toggleWishlist(Request $request)
+    {
+        $validated = $request->validate([
+            'catalog_item_id' => ['required', 'integer'],
+        ]);
+
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'يرجى تسجيل الدخول أولاً.'], 401);
+        }
+
+        $wishlist = \App\Models\ErpWishlist::where('user_id', $user->id)
+            ->where('erp_catalog_item_id', $validated['catalog_item_id'])
+            ->first();
+
+        if ($wishlist) {
+            $wishlist->delete();
+            return response()->json(['success' => true, 'action' => 'removed', 'message' => 'تمت الإزالة من قائمة الرغبات.']);
+        } else {
+            \App\Models\ErpWishlist::create([
+                'user_id'             => $user->id,
+                'erp_catalog_item_id' => $validated['catalog_item_id'],
+            ]);
+            return response()->json(['success' => true, 'action' => 'added', 'message' => 'تمت الإضافة إلى قائمة الرغبات بنجاح.']);
+        }
+    }
+
+    /**
+     * Generate quick quotation for selected modules.
+     */
+    public function quickQuotation(Request $request)
+    {
+        $validated = $request->validate([
+            'item_ids'   => ['required', 'array', 'min:1'],
+            'item_ids.*' => ['integer'],
+        ]);
+
+        $items = ErpCatalogItem::whereIn('id', $validated['item_ids'])->get();
+        $subtotal = (float)$items->sum('price');
+        $discount = $items->count() >= 3 ? ($subtotal * 0.15) : 0.00;
+        $total = max(0.00, $subtotal - $discount);
+
+        return response()->json([
+            'success'  => true,
+            'count'    => $items->count(),
+            'subtotal' => $subtotal,
+            'discount' => $discount,
+            'total'    => $total,
         ]);
     }
 }

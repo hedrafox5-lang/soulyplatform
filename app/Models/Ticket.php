@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Ticket extends Model
 {
@@ -59,5 +60,15 @@ class Ticket extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(TicketMessage::class);
+    }
+
+    public function replies(): HasMany
+    {
+        return $this->hasMany(TicketMessage::class);
+    }
+
+    public function latestReply(): HasOne
+    {
+        return $this->hasOne(TicketMessage::class)->latestOfMany();
     }
 }

@@ -39,18 +39,22 @@ class DeployController extends Controller
             Artisan::call('migrate', ['--force' => true]);
             $logs['migrate'] = trim(Artisan::output());
 
-            // 3. Database Seeders (BrandERP 500 features, Hardware Store 24 products, Services & Canned responses)
-            Artisan::call('db:seed', ['--class' => 'ServiceCatalogSeeder', '--force' => true]);
-            $logs['service_seeder'] = trim(Artisan::output());
+            // 3. Database Seeders (Safely catch if individual class is missing)
+            $seeders = [
+                'ServiceCatalogSeeder'     => 'service_seeder',
+                'CannedResponsesVaultSeeder'=> 'canned_seeder',
+                'ErpStoreCatalogSeeder'    => 'erp_seeder',
+                'HardwareProductSeeder'    => 'hardware_seeder',
+            ];
 
-            Artisan::call('db:seed', ['--class' => 'CannedResponsesVaultSeeder', '--force' => true]);
-            $logs['canned_seeder'] = trim(Artisan::output());
-
-            Artisan::call('db:seed', ['--class' => 'ErpStoreCatalogSeeder', '--force' => true]);
-            $logs['erp_seeder'] = trim(Artisan::output());
-
-            Artisan::call('db:seed', ['--class' => 'HardwareProductSeeder', '--force' => true]);
-            $logs['hardware_seeder'] = trim(Artisan::output());
+            foreach ($seeders as $class => $logKey) {
+                try {
+                    Artisan::call('db:seed', ['--class' => $class, '--force' => true]);
+                    $logs[$logKey] = trim(Artisan::output());
+                } catch (\Throwable $se) {
+                    $logs[$logKey] = "تنبيه: " . $se->getMessage();
+                }
+            }
 
             // 4. Storage Symlink
             $storageStatus = 'تم الربط مسبقاً';
@@ -70,7 +74,7 @@ class DeployController extends Controller
                     Artisan::call('config:cache');
                     Artisan::call('route:cache');
                     Artisan::call('view:cache');
-                    $logs['production_cache'] = 'تم تفعيل التخزين المؤقت للإعدادات والمسارات والقوالب لتقليل استهلاك المعالج إلى أدنى حد.';
+                    $logs['production_cache'] = 'تم تفعيل التخزين المؤقت للإعدادات والمسارات والقوالب لتقليل استهلاك المعالج.';
                 } catch (\Throwable $e) {
                     $logs['production_cache'] = 'تنبيه كاش: ' . $e->getMessage();
                 }
@@ -108,7 +112,7 @@ class DeployController extends Controller
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تأكيد الهوية لتحديث منصة سولي | Souly Citadel</title>
+    <title>تأكيد الهوية لنشر وترقية منصة سولي | Souly Citadel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -125,7 +129,7 @@ class DeployController extends Controller
             <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/40 text-cyan-400 text-2xl">
                 🛡️
             </div>
-            <h1 class="text-xl sm:text-2xl font-black text-white">ترقية وتحديث منصة سولي</h1>
+            <h1 class="text-xl sm:text-2xl font-black text-white">ترقية ونشر منصة سولي</h1>
             <p class="text-xs text-slate-400">يرجى إدخال المفتاح السري للنشر (Deployment Secret Key) للمتابعة وتطبيق كافة التعديلات على قاعدة البيانات ولارافيل.</p>
         </div>
 
@@ -157,8 +161,6 @@ HTML;
         $catalogCounts = $data['catalogCounts'];
         $featuresCount = $catalogCounts['feature'] ?? 0;
         $modulesCount = $catalogCounts['module'] ?? 0;
-        $coreCount = $catalogCounts['core'] ?? 0;
-        $bundlesCount = $catalogCounts['bundle'] ?? 0;
         $hardwareCount = $data['hardwareCount'];
         $logsJson = htmlspecialchars(json_encode($data['logs'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
 
@@ -189,31 +191,31 @@ HTML;
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
             </div>
             <h1 class="text-2xl sm:text-4xl font-black text-white">
-                تم تطبيق كافة التحديثات وتم تنفيذ أمر النشر بنجاح 🚀
+                تم تطبيق كافة التحديثات وتنفيذ أمر النشر بنجاح 🚀
             </h1>
             <p class="text-xs sm:text-sm text-slate-300">
-                تم تنفيذ ترقيات الداتابيز، تغذية متجري BrandERP والهاردوير، وتهيئة وتفريغ الكاش في <span class="text-cyan-300 font-mono font-bold">{$duration} ثانية</span>.
+                تم تنفيذ ترقيات الداتابيز، تغذية متاجر المنظومة، وتهيئة وتفريغ الكاش في <span class="text-cyan-300 font-mono font-bold">{$duration} ثانية</span>.
             </p>
         </div>
 
         <!-- Telemetry Cards -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div class="glass-box rounded-2xl p-4 text-center space-y-1">
-                <span class="text-xs text-slate-400 block">مميزات BrandERP الدقيقة</span>
+                <span class="text-xs text-slate-400 block">مميزات BrandERP</span>
                 <span class="text-2xl sm:text-3xl font-black font-mono text-cyan-400">{$featuresCount}</span>
                 <span class="text-[10px] text-emerald-400 font-bold block">✓ نشطة في المتجر</span>
             </div>
 
             <div class="glass-box rounded-2xl p-4 text-center space-y-1">
-                <span class="text-xs text-slate-400 block">موديولات BrandERP الكبرى</span>
+                <span class="text-xs text-slate-400 block">موديولات BrandERP</span>
                 <span class="text-2xl sm:text-3xl font-black font-mono text-purple-400">{$modulesCount}</span>
                 <span class="text-[10px] text-emerald-400 font-bold block">✓ مع النواة الأساسية</span>
             </div>
 
             <div class="glass-box rounded-2xl p-4 text-center space-y-1">
-                <span class="text-xs text-slate-400 block">منتجات متجر الهاردوير</span>
+                <span class="text-xs text-slate-400 block">منتجات الهاردوير</span>
                 <span class="text-2xl sm:text-3xl font-black font-mono text-amber-400">{$hardwareCount}</span>
-                <span class="text-[10px] text-emerald-400 font-bold block">✓ 4 أقسام رئيسية</span>
+                <span class="text-[10px] text-emerald-400 font-bold block">✓ جاهزة للطلب</span>
             </div>
 
             <div class="glass-box rounded-2xl p-4 text-center space-y-1">
@@ -232,19 +234,19 @@ HTML;
             <ul class="space-y-2.5 text-xs sm:text-sm text-slate-300">
                 <li class="flex items-center gap-2.5">
                     <span class="text-emerald-400 font-bold text-base">✓</span>
-                    <span><strong>قاعدة البيانات (Migrations):</strong> تنفيذ كافة ملفات الترقية (توسيع كتالوج الـ ERP، متجر الهاردوير، ونطاقات تذاكر الدعم).</span>
+                    <span><strong>قاعدة البيانات (Migrations):</strong> تنفيذ كافة ملفات الترقية (الفواتير، الضمانات، أكواد الخصم، الأجهزة).</span>
                 </li>
                 <li class="flex items-center gap-2.5">
                     <span class="text-emerald-400 font-bold text-base">✓</span>
-                    <span><strong>كتالوج BrandERP الموديلار (500 ميزة + 16 موديول):</strong> تغذية الجداول بالنواة الأساسية (2,000 ج.م) والباقات والمميزات الدقيقة.</span>
+                    <span><strong>كتالوج BrandERP الموديلار:</strong> تغذية الجداول بالنواة الأساسية والباقات والمميزات الدقيقة.</span>
                 </li>
                 <li class="flex items-center gap-2.5">
                     <span class="text-emerald-400 font-bold text-base">✓</span>
-                    <span><strong>متجر قطع الهاردوير (24 منتجاً):</strong> تغذية شاشات اللمس، طابعات الفواتير، الراوترات، وهاردات الـ SSD.</span>
+                    <span><strong>متجر قطع الهاردوير:</strong> تغذية شاشات اللمس، طابعات الفواتير، الراوترات، ومستلزمات الصيانة.</span>
                 </li>
                 <li class="flex items-center gap-2.5">
                     <span class="text-emerald-400 font-bold text-base">✓</span>
-                    <span><strong>ربط الملفات (Storage Symlink):</strong> التحقق من سلامة رابط الصور والملفات المرفوعة.</span>
+                    <span><strong>ربط الملفات (Storage Symlink):</strong> التحقق من سلامة رابط الصور والمرفقات العامة.</span>
                 </li>
                 <li class="flex items-center gap-2.5">
                     <span class="text-emerald-400 font-bold text-base">✓</span>
@@ -259,7 +261,7 @@ HTML;
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-center text-xs font-bold">
                 <a href="/store/branderp" 
                    class="p-3.5 rounded-xl bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/25 transition-all">
-                    🏪 متجر BrandERP
+                    🏬 متجر BrandERP
                 </a>
                 <a href="/store/hardware" 
                    class="p-3.5 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 hover:bg-amber-500/25 transition-all">
@@ -269,9 +271,9 @@ HTML;
                    class="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25 transition-all">
                     👤 بوابة العميل
                 </a>
-                <a href="/admin" 
+                <a href="/admin/host-ops" 
                    class="p-3.5 rounded-xl bg-purple-500/15 border border-purple-500/40 text-purple-300 hover:bg-purple-500/25 transition-all">
-                    ⚙️ لوحة الأدمن
+                    ⚡ إدارة الهوست
                 </a>
             </div>
             

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Warranty;
+use App\Models\WarrantyClaim;
 use App\Models\Setting;
 use App\Traits\NormalizesEgyptianPhone;
 use Illuminate\Http\Request;
@@ -69,62 +70,69 @@ class AdminInvoiceController extends Controller
             'payment_status'          => ['required', 'in:paid,unpaid,partially_paid'],
             'source_type'             => ['required', 'in:field_service,hardware_order,erp_license,custom'],
             'source_id'               => ['nullable', 'integer'],
+            'tax_amount'              => ['nullable', 'numeric', 'min:0'],
+            'discount_amount'         => ['nullable', 'numeric', 'min:0'],
             'items'                   => ['required', 'array', 'min:1'],
-            'items.*.name'            => ['required', 'string', 'max:255'],
-            'items.*.code'            => ['nullable', 'string', 'max:100'],
-            'items.*.qty'             => ['required', 'integer', 'min:1'],
-            'items.*.price'           => ['required', 'numeric', 'min:0'],
+            'items.*.item_name'       => ['required', 'string'],
+            'items.*.item_code'       => ['nullable', 'string'],
+            'items.*.quantity'        => ['required', 'integer', 'min:1'],
+            'items.*.unit_price'      => ['required', 'numeric', 'min:0'],
             'items.*.discount'        => ['nullable', 'numeric', 'min:0'],
             'items.*.warranty_days'   => ['nullable', 'integer', 'min:0'],
-            'items.*.warranty_policy' => ['nullable', 'in:replacement,repair,software_maintenance'],
+            'items.*.warranty_policy' => ['nullable', 'string'],
+            'notes'                   => ['nullable', 'string'],
         ]);
 
-        $normalizedPhone = $this->normalizeEgyptianPhone($validated['client_phone']);
+        $normalizedPhone = $this->normalizeEgyptianPhone($validated['client_phone']) ?? $validated['client_phone'];
 
         try {
             $invoice = DB::transaction(function () use ($validated, $normalizedPhone) {
                 $subtotal = 0.00;
-                $totalDiscount = 0.00;
-
                 foreach ($validated['items'] as $item) {
-                    $subtotal += ((float)$item['price'] * (int)$item['qty']);
-                    $totalDiscount += (float)($item['discount'] ?? 0);
+                    $itemTotal = ((float)$item['unit_price'] * (int)$item['quantity']) - (float)($item['discount'] ?? 0);
+                    $subtotal += max(0, $itemTotal);
                 }
 
-                $totalAmount = max(0, $subtotal - $totalDiscount);
+                $discount = (float)($validated['discount_amount'] ?? 0.00);
+                $tax = (float)($validated['tax_amount'] ?? 0.00);
+                $grandTotal = max(0, $subtotal - $discount + $tax);
+
+                $invoiceNumber = 'INV-' . date('ymd') . '-' . strtoupper(Str::random(4));
+                $hashId = hash('sha256', Str::uuid() . time() . $invoiceNumber);
 
                 $invoice = Invoice::create([
-                    'invoice_number' => 'INV-' . date('ymd') . '-' . strtoupper(Str::random(5)),
-                    'hash_id'        => hash('sha256', Str::uuid() . time()),
-                    'user_id'        => $validated['user_id'],
-                    'client_name'    => strip_tags(trim($validated['client_name'])),
-                    'client_phone'   => $normalizedPhone,
-                    'client_email'   => !empty($validated['client_email']) ? strtolower(trim($validated['client_email'])) : null,
-                    'client_company' => !empty($validated['client_company']) ? strip_tags(trim($validated['client_company'])) : null,
-                    'client_address' => !empty($validated['client_address']) ? strip_tags(trim($validated['client_address'])) : null,
-                    'subtotal'       => $subtotal,
-                    'discount_amount'=> $totalDiscount,
-                    'total_amount'   => $totalAmount,
-                    'payment_method' => $validated['payment_method'],
-                    'payment_status' => $validated['payment_status'],
-                    'paid_at'        => $validated['payment_status'] === 'paid' ? now() : null,
-                    'source_type'    => $validated['source_type'],
-                    'source_id'      => $validated['source_id'] ?? null,
+                    'invoice_number'  => $invoiceNumber,
+                    'hash_id'         => $hashId,
+                    'user_id'         => $validated['user_id'],
+                    'client_name'     => $validated['client_name'],
+                    'client_phone'    => $normalizedPhone,
+                    'client_email'    => $validated['client_email'] ?? null,
+                    'client_company'  => $validated['client_company'] ?? null,
+                    'client_address'  => $validated['client_address'] ?? null,
+                    'subtotal'        => $subtotal,
+                    'discount_amount' => $discount,
+                    'tax_amount'      => $tax,
+                    'total_amount'    => $grandTotal,
+                    'payment_method'  => $validated['payment_method'],
+                    'payment_status'  => $validated['payment_status'],
+                    'paid_at'         => $validated['payment_status'] === 'paid' ? now() : null,
+                    'source_type'     => $validated['source_type'],
+                    'source_id'       => $validated['source_id'] ?? null,
+                    'notes'           => $validated['notes'] ?? null,
                 ]);
 
                 foreach ($validated['items'] as $item) {
-                    $itemDiscount = (float)($item['discount'] ?? 0);
-                    $itemTotalPrice = ((float)$item['price'] * (int)$item['qty']) - $itemDiscount;
+                    $itemTotal = ((float)$item['unit_price'] * (int)$item['quantity']) - (float)($item['discount'] ?? 0);
                     $warrantyDays = (int)($item['warranty_days'] ?? 0);
 
                     $lineItem = InvoiceItem::create([
                         'invoice_id'      => $invoice->id,
-                        'item_name'       => strip_tags(trim($item['name'])),
-                        'item_code'       => !empty($item['code']) ? strip_tags(trim($item['code'])) : null,
-                        'quantity'        => (int)$item['qty'],
-                        'unit_price'      => (float)$item['price'],
-                        'discount'        => $itemDiscount,
-                        'total_price'     => $itemTotalPrice,
+                        'item_name'       => $item['item_name'],
+                        'item_code'       => $item['item_code'] ?? null,
+                        'quantity'        => (int)$item['quantity'],
+                        'unit_price'      => (float)$item['unit_price'],
+                        'discount'        => (float)($item['discount'] ?? 0),
+                        'total_price'     => max(0, $itemTotal),
                         'warranty_days'   => $warrantyDays,
                         'warranty_policy' => $item['warranty_policy'] ?? null,
                     ]);
@@ -154,7 +162,7 @@ class AdminInvoiceController extends Controller
 
         } catch (\Throwable $e) {
             Log::error('Admin Invoice Creation Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return back()->with('error', 'حدث خطأ أثناء إصدار الفاتورة.')->withInput();
+            return back()->with('error', 'حدث خطأ أثناء إصدار الفاتورة: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -190,6 +198,37 @@ class AdminInvoiceController extends Controller
     }
 
     /**
+     * Display all warranty claims for admin review.
+     */
+    public function warrantyClaims(Request $request)
+    {
+        $claims = WarrantyClaim::with(['warranty', 'user', 'booking'])
+            ->latest()
+            ->paginate(15);
+
+        return view('admin.invoices.warranty-claims', compact('claims'));
+    }
+
+    /**
+     * Resolve or update status of a warranty claim.
+     */
+    public function resolveWarrantyClaim(Request $request, WarrantyClaim $claim)
+    {
+        $validated = $request->validate([
+            'claim_status' => ['required', 'in:pending,approved,rejected,in_progress,resolved'],
+            'admin_notes'  => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $claim->update([
+            'claim_status' => $validated['claim_status'],
+            'admin_notes'  => $validated['admin_notes'] ?? $claim->admin_notes,
+            'resolved_at'  => in_array($validated['claim_status'], ['resolved', 'rejected']) ? now() : $claim->resolved_at,
+        ]);
+
+        return back()->with('citadel_toast', 'تم تحديث حالة مطالبة الضمان بنجاح.');
+    }
+
+    /**
      * Generate direct messaging payload for customer notification without external APIs.
      */
     public function getCustomerMessageData(Invoice $invoice)
@@ -202,7 +241,7 @@ class AdminInvoiceController extends Controller
         }
 
         $template = Setting::where('key', 'whatsapp_tpl_invoice')->value('value') 
-            ?? "مرحباً أستاذ {name}، شكراً لتعاملك مع مؤسسة سولي للتكنولوجيا. تم إصدار فاتورتك المعتمدة رقم #{invoice_number} بقيمة {total_amount} ج.م.\nرابط الفاتورة والضمان: {invoice_url}";
+            ?? "مرحباً {name}، شكراً لتعاملك مع مؤسسة سولي للتكنولوجيا. تم إصدار فاتورتك المعتمدة رقم #{invoice_number} بقيمة {total_amount} ج.م.\nرابط الفاتورة والضمان: {invoice_url}";
 
         $invoiceUrl = route('invoice.verify', $invoice->hash_id);
 

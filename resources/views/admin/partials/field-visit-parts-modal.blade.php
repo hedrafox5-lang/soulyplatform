@@ -12,7 +12,7 @@
             </h3>
         </div>
 
-        <form method="POST" :action="'/admin/bookings/' + bookingId + '/complete'" class="space-y-4">
+        <form method="POST" :action="'/admin/bookings/' + bookingId + '/complete-visit'" class="space-y-4">
             @csrf
             
             <div>
@@ -30,37 +30,37 @@
                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-cyan-500">
             </div>
 
+            <div>
+                <label class="block text-xs text-slate-400 mb-1.5">ملاحظات المهندس الفني وتوصيات الاستخدام:</label>
+                <textarea name="technician_notes" rows="3" placeholder="ملاحظات حول حالة الأجهزة بعد الصيانة..."
+                    class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-cyan-500 leading-relaxed"></textarea>
+            </div>
+
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1.5">فترة الضمان المعتمدة:</label>
-                    <select name="warranty_months" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-cyan-500">
+                    <label class="block text-xs text-slate-400 mb-1.5">شهادة الضمان الممنوحة:</label>
+                    <select name="warranty_months" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
                         <option value="1">شهر واحد</option>
-                        <option value="3" selected>3 أشهر (قياسي)</option>
+                        <option value="3" selected>3 أشهر</option>
                         <option value="6">6 أشهر</option>
                         <option value="12">سنة كاملة</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1.5">حالة العمل:</label>
-                    <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-emerald-400 font-bold text-center">
-                        اكتمال الزيارة ✅
+                    <label class="block text-xs text-slate-400 mb-1.5">إصدار الفاتورة فورياً:</label>
+                    <div class="p-2 bg-slate-950 border border-slate-800 rounded-xl text-center">
+                        <span class="text-xs font-bold text-emerald-400">تلقائي مع QR ✓</span>
                     </div>
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs text-slate-400 mb-1.5">الملاحظات الفنية للمهندس:</label>
-                <textarea name="technician_notes" rows="2" placeholder="حالة الجهاز قبل وبعد، أي توصيات للعميل..."
-                    class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-cyan-500"></textarea>
-            </div>
-
-            <div class="p-3 bg-cyan-950/20 border border-cyan-800/40 rounded-xl text-[11px] text-cyan-300">
-                💡 فور التأكيد، سيتم إنشاء الفاتورة الرسمية وشهادة الضمان للعميل تلقائياً برمز QR.
-            </div>
-
-            <div class="flex items-center justify-end gap-2 pt-2">
-                <button type="button" @click="open = false" class="px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white">إلغاء</button>
-                <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all shadow-lg shadow-emerald-500/20">
+            <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+                <button type="button" @click="open = false" 
+                    class="px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white transition-colors">
+                    إلغاء
+                </button>
+                <button type="submit" 
+                    class="px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all shadow-lg shadow-amber-500/20">
                     اعتماد وإنهاء الزيارة
                 </button>
             </div>
