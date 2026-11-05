@@ -41,6 +41,14 @@ class Lead extends Model
     }
 
     /**
+     * متوافق مع الاستدعاءات التبادلية باسم interestedService
+     */
+    public function interestedService()
+    {
+        return $this->service();
+    }
+
+    /**
      * علاقة المستخدم في حال تم تحويل العميل المحتمل إلى حساب عميل نشط
      */
     public function user()

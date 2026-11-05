@@ -74,6 +74,56 @@ class SoulyNotificationService
     }
 
     /**
+     * إرجاع أحدث الإشعارات للمستخدم مع دعم ترتيب المعاملات (userId, limit)
+     */
+    public static function getLatestForUser(?int $userId = null, int $limit = 30)
+    {
+        return self::getLatest($limit, $userId);
+    }
+
+    /**
+     * تحديد الأيقونة المناسبة لنوع الإشعار
+     */
+    public static function resolveIcon(?string $type = null): string
+    {
+        return match (strtolower((string) $type)) {
+            'wallet'   => '💳',
+            'booking'  => '📅',
+            'ticket'   => '🎫',
+            'crm'      => '💼',
+            'security' => '🛡️',
+            'hardware' => '💻',
+            default    => '🔔',
+        };
+    }
+
+    /**
+     * تحديد كافة إشعارات المستخدم كمقروءة دفعة واحدة
+     */
+    public static function markAllAsRead(?int $userId = null): int
+    {
+        try {
+            $targetUserId = $userId ?: Auth::id();
+            if (!$targetUserId) {
+                return 0;
+            }
+
+            if (class_exists(Notification::class) && Schema::hasTable('notifications')) {
+                return (int) Notification::where('user_id', $targetUserId)
+                    ->where('is_read', false)
+                    ->update([
+                        'is_read' => true,
+                        'read_at' => now(),
+                    ]);
+            }
+
+            return 0;
+        } catch (\Throwable $e) {
+            return 0;
+        }
+    }
+
+    /**
      * إرسال إشعار فوري وتخزينه في جدول الإشعارات
      */
     public function send(User $user, string $title, string $message, string $type = 'info', ?string $actionUrl = null): bool
