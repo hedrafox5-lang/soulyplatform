@@ -32,12 +32,21 @@ class AppServiceProvider extends ServiceProvider
                         ->get();
                 }
 
+                // Provide lightweight starter precache for instant initial render
                 $allIcons = $cachedServices->flatMap(function ($s) {
-                    return $s->icons->map(function ($icon) use ($s) {
-                        $data = $icon->toArray();
-                        $data['service_name'] = $s->name;
-                        $data['service_slug'] = $s->slug;
-                        return $data;
+                    return $s->icons->take(4)->map(function ($icon) use ($s) {
+                        return [
+                            'id' => $icon->id,
+                            'title' => $icon->title,
+                            'badge_text' => $icon->badge_text,
+                            'icon_name' => $icon->icon_name,
+                            'popup_title' => $icon->popup_title,
+                            'popup_summary' => $icon->popup_summary,
+                            'popup_bullets_json' => $icon->popup_bullets_json,
+                            'popup_cta_text' => $icon->popup_cta_text,
+                            'service_name' => $s->name,
+                            'service_slug' => $s->slug,
+                        ];
                     });
                 })->values();
 

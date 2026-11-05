@@ -4,18 +4,18 @@
 @section('page-title', 'لوحة التحكم والعمليات')
 
 @section('portal-content')
-<div class="space-y-8">
+<div class="space-y-6 sm:space-y-8">
 
     <!-- ===================================================================== -->
     <!-- 1. STATS & WALLET HUD METRICS                                         -->
     <!-- ===================================================================== -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         
         <!-- Metric 1: Digital Wallet Balance -->
-        <div class="p-6 rounded-3xl glass-obsidian border border-cyber-cyan/40 shadow-neon-cyan relative overflow-hidden flex flex-col justify-between space-y-4">
+        <div class="col-span-2 sm:col-span-1 p-5 sm:p-6 rounded-3xl glass-obsidian border border-cyber-cyan/40 shadow-[0_4px_24px_rgba(0,245,212,0.12)] relative overflow-hidden flex flex-col justify-between space-y-4">
             <div class="absolute -top-10 -right-10 w-32 h-32 bg-cyber-cyan/15 rounded-full blur-2xl pointer-events-none"></div>
             <div>
-                <div class="flex items-center justify-between text-xs font-readex text-slate-400">
+                <div class="flex items-center justify-between text-xs font-cairo text-slate-400">
                     <span>رصيد محفظة سولي</span>
                     <span class="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse"></span>
                 </div>
@@ -29,17 +29,17 @@
 
             <div class="pt-2">
                 <a href="{{ route('portal.wallet') }}" 
-                   class="w-full py-2.5 px-3 rounded-xl bg-cyber-cyan text-obsidian-base font-extrabold text-xs font-cairo text-center block shadow-neon-cyan hover:scale-[1.02] active:scale-95 transition-all">
+                   class="w-full py-2.5 px-3 rounded-xl btn-citadel-primary text-xs text-center block shadow-neon-cyan">
                     + شحن رصيد المحفظة
                 </a>
             </div>
         </div>
 
         <!-- Metric 2: Active Bookings -->
-        <div class="p-6 rounded-3xl glass-obsidian border border-obsidian-border flex flex-col justify-between space-y-4">
+        <div class="p-4 sm:p-6 rounded-3xl glass-obsidian border border-obsidian-border flex flex-col justify-between space-y-4">
             <div>
-                <div class="flex items-center justify-between text-xs font-readex text-slate-400">
-                    <span>الحجوزات والطلبات الجارية</span>
+                <div class="flex items-center justify-between text-xs font-cairo text-slate-400">
+                    <span>الحجوزات الجارية</span>
                     <div class="w-8 h-8 rounded-xl bg-cyber-gold/15 text-cyber-gold flex items-center justify-center">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -47,16 +47,16 @@
                     </div>
                 </div>
                 <div class="flex items-baseline gap-2 mt-2">
-                    <span class="text-3xl lg:text-4xl font-black font-mono text-cyber-gold">
+                    <span class="text-2xl sm:text-4xl font-black font-mono text-cyber-gold">
                         {{ $activeBookingsCount }}
                     </span>
-                    <span class="text-xs font-readex text-slate-400">طلب نشط</span>
+                    <span class="text-xs font-cairo text-slate-400">طلب نشط</span>
                 </div>
             </div>
 
             <div class="pt-2">
                 <a href="{{ route('portal.bookings') }}" class="text-xs text-cyber-gold font-bold hover:underline font-cairo flex items-center gap-1">
-                    <span>متابعة حالة الحجوزات</span>
+                    <span>متابعة الحالات</span>
                     <svg class="w-3.5 h-3.5 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
                     </svg>
@@ -65,10 +65,10 @@
         </div>
 
         <!-- Metric 3: Completed Orders -->
-        <div class="p-6 rounded-3xl glass-obsidian border border-obsidian-border flex flex-col justify-between space-y-4">
+        <div class="p-4 sm:p-6 rounded-3xl glass-obsidian border border-obsidian-border flex flex-col justify-between space-y-4">
             <div>
-                <div class="flex items-center justify-between text-xs font-readex text-slate-400">
-                    <span>المشاريع المنجزة بنجاح</span>
+                <div class="flex items-center justify-between text-xs font-cairo text-slate-400">
+                    <span>المشاريع المنجزة</span>
                     <div class="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -76,10 +76,10 @@
                     </div>
                 </div>
                 <div class="flex items-baseline gap-2 mt-2">
-                    <span class="text-3xl lg:text-4xl font-black font-mono text-emerald-400">
+                    <span class="text-2xl sm:text-4xl font-black font-mono text-emerald-400">
                         {{ $completedBookingsCount }}
                     </span>
-                    <span class="text-xs font-readex text-slate-400">مشروع منجز</span>
+                    <span class="text-xs font-cairo text-slate-400">مشروع منجز</span>
                 </div>
             </div>
 
@@ -94,9 +94,9 @@
         </div>
 
         <!-- Metric 4: Open Support Tickets -->
-        <div class="p-6 rounded-3xl glass-obsidian border border-obsidian-border flex flex-col justify-between space-y-4">
+        <div class="p-4 sm:p-6 rounded-3xl glass-obsidian border border-obsidian-border flex flex-col justify-between space-y-4">
             <div>
-                <div class="flex items-center justify-between text-xs font-readex text-slate-400">
+                <div class="flex items-center justify-between text-xs font-cairo text-slate-400">
                     <span>تذاكر الدعم المفتوحة</span>
                     <div class="w-8 h-8 rounded-xl bg-cyber-purple/20 text-purple-300 flex items-center justify-center">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -105,10 +105,10 @@
                     </div>
                 </div>
                 <div class="flex items-baseline gap-2 mt-2">
-                    <span class="text-3xl lg:text-4xl font-black font-mono text-purple-300">
+                    <span class="text-2xl sm:text-4xl font-black font-mono text-purple-300">
                         {{ $openTicketsCount }}
                     </span>
-                    <span class="text-xs font-readex text-slate-400">تذكرة قيد المتابعة</span>
+                    <span class="text-xs font-cairo text-slate-400">تذكرة مفتوحة</span>
                 </div>
             </div>
 
@@ -127,19 +127,19 @@
     <!-- ===================================================================== -->
     <!-- 2. ACTIVE BOOKINGS STATUS PROGRESSION TRACKER                         -->
     <!-- ===================================================================== -->
-    <div class="rounded-3xl glass-obsidian border border-obsidian-border p-6 sm:p-8 space-y-6">
+    <div class="rounded-3xl glass-obsidian border border-obsidian-border p-5 sm:p-7 lg:p-8 space-y-6">
         <div class="flex items-center justify-between border-b border-obsidian-border/80 pb-4">
             <div>
-                <h3 class="text-lg font-bold text-white font-cairo flex items-center gap-2">
+                <h3 class="text-base sm:text-lg font-bold text-white font-cairo flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-cyber-cyan animate-pulse"></span>
                     <span>تتبع مراحل تنفيذ الحجوزات والخدمات</span>
                 </h3>
-                <p class="text-xs text-slate-400 font-readex mt-0.5">
-                    متابعة هندسية حية لكافة مراحل تجهيز وتركيب أنظمتك من البداية وحتى التسليم والضمان
+                <p class="text-[11px] sm:text-xs text-slate-400 font-cairo mt-0.5">
+                    متابعة هندسية حية لكافة مراحل تجهيز وتركيب أنظمتك من البداية وحتى التسليم
                 </p>
             </div>
 
-            <a href="{{ route('portal.bookings') }}" class="text-xs font-bold text-cyber-cyan hover:underline font-cairo">
+            <a href="{{ route('portal.bookings') }}" class="text-xs font-bold text-cyber-cyan hover:underline font-cairo shrink-0">
                 كافة الحجوزات ⇥
             </a>
         </div>
@@ -150,7 +150,7 @@
                     <div class="p-4 sm:p-5 rounded-2xl bg-obsidian-surface border border-obsidian-border space-y-4">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div>
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 flex-wrap">
                                     <span class="font-mono text-xs font-bold text-cyber-cyan">{{ $booking->booking_number }}</span>
                                     <span class="text-xs text-slate-500">|</span>
                                     <span class="font-bold text-sm text-white font-cairo">{{ $booking->service->name }}</span>
@@ -160,7 +160,7 @@
                                         </span>
                                     @endif
                                 </div>
-                                <div class="text-[11px] text-slate-400 font-readex mt-1">
+                                <div class="text-[11px] text-slate-400 font-cairo mt-1">
                                     التكلفة: <strong class="text-white font-mono">{{ number_format($booking->total_amount, 2) }} ج.م</strong>
                                     · حالة الدفع: 
                                     @if($booking->payment_status === 'paid')
@@ -198,20 +198,20 @@
 
                             <div class="grid grid-cols-4 gap-2 text-center text-[10px] font-cairo font-bold">
                                 <div class="space-y-1.5">
-                                    <div class="h-1.5 rounded-full {{ $step >= 1 ? 'bg-cyber-cyan shadow-neon-cyan' : 'bg-obsidian-border' }}"></div>
-                                    <span class="{{ $step >= 1 ? 'text-cyber-cyan' : 'text-slate-500' }}">1. تسجيل الحجز</span>
+                                    <div class="h-1.5 rounded-full {{ $step >= 1 ? 'bg-cyber-cyan' : 'bg-obsidian-border' }}"></div>
+                                    <span class="{{ $step >= 1 ? 'text-cyber-cyan' : 'text-slate-500' }}">1. التسجيل</span>
                                 </div>
                                 <div class="space-y-1.5">
-                                    <div class="h-1.5 rounded-full {{ $step >= 2 ? 'bg-cyber-cyan shadow-neon-cyan' : 'bg-obsidian-border' }}"></div>
-                                    <span class="{{ $step >= 2 ? 'text-cyber-cyan' : 'text-slate-500' }}">2. التأكيد والاعتماد</span>
+                                    <div class="h-1.5 rounded-full {{ $step >= 2 ? 'bg-cyber-cyan' : 'bg-obsidian-border' }}"></div>
+                                    <span class="{{ $step >= 2 ? 'text-cyber-cyan' : 'text-slate-500' }}">2. الاعتماد</span>
                                 </div>
                                 <div class="space-y-1.5">
-                                    <div class="h-1.5 rounded-full {{ $step >= 3 ? 'bg-cyber-gold shadow-neon-gold' : 'bg-obsidian-border' }}"></div>
-                                    <span class="{{ $step >= 3 ? 'text-cyber-gold' : 'text-slate-500' }}">3. التنفيذ الميداني</span>
+                                    <div class="h-1.5 rounded-full {{ $step >= 3 ? 'bg-cyber-gold' : 'bg-obsidian-border' }}"></div>
+                                    <span class="{{ $step >= 3 ? 'text-cyber-gold' : 'text-slate-500' }}">3. التنفيذ</span>
                                 </div>
                                 <div class="space-y-1.5">
                                     <div class="h-1.5 rounded-full {{ $step >= 4 ? 'bg-emerald-400' : 'bg-obsidian-border' }}"></div>
-                                    <span class="{{ $step >= 4 ? 'text-emerald-400' : 'text-slate-500' }}">4. التسليم والضمان</span>
+                                    <span class="{{ $step >= 4 ? 'text-emerald-400' : 'text-slate-500' }}">4. الضمان</span>
                                 </div>
                             </div>
                         </div>
@@ -221,16 +221,14 @@
         @else
             <div class="p-8 rounded-2xl bg-obsidian-surface border border-obsidian-border/60 text-center space-y-3">
                 <div class="w-12 h-12 rounded-2xl bg-cyber-cyan/10 text-cyber-cyan flex items-center justify-center mx-auto">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    ✓
                 </div>
                 <div class="text-sm font-bold text-white font-cairo">لا توجد حجوزات نشطة حالياً</div>
-                <p class="text-xs text-slate-400 font-readex max-w-sm mx-auto">
+                <p class="text-xs text-slate-400 font-cairo max-w-sm mx-auto">
                     يمكنك استعراض خدماتنا الست وحجز باقتك مباشرة بالخصم من رصيد محفظتك الرقمية.
                 </p>
                 <div class="pt-2">
-                    <a href="{{ route('portal.bookings') }}" class="inline-flex px-5 py-2.5 rounded-xl bg-cyber-cyan text-obsidian-base font-extrabold text-xs font-cairo shadow-neon-cyan">
+                    <a href="{{ route('portal.bookings') }}" class="inline-flex px-5 py-2.5 rounded-xl btn-citadel-primary text-xs">
                         حجز خدمة هندسية جديدة
                     </a>
                 </div>
@@ -241,10 +239,10 @@
     <!-- ===================================================================== -->
     <!-- 3. SPLIT HUD: RECENT TRANSACTIONS & SUPPORT TICKETS                   -->
     <!-- ===================================================================== -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
         
         <!-- Box 1: Recent Wallet Activity -->
-        <div class="p-6 rounded-3xl glass-obsidian border border-obsidian-border space-y-5">
+        <div class="p-5 sm:p-6 rounded-3xl glass-obsidian border border-obsidian-border space-y-4">
             <div class="flex items-center justify-between border-b border-obsidian-border/80 pb-3">
                 <h4 class="text-sm font-bold text-white font-cairo flex items-center gap-2">
                     <svg class="w-4 h-4 text-cyber-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -258,23 +256,23 @@
             </div>
 
             @if($recentTransactions->count() > 0)
-                <div class="space-y-3">
+                <div class="space-y-2.5">
                     @foreach($recentTransactions as $tx)
                         <div class="p-3.5 rounded-xl bg-obsidian-surface border border-obsidian-border/60 flex items-center justify-between gap-3 text-xs">
                             <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono font-black text-xs
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono font-black text-xs shrink-0
                                     {{ $tx->type === 'deposit' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400' }}">
                                     {{ $tx->type === 'deposit' ? '+' : '-' }}
                                 </div>
-                                <div>
-                                    <div class="font-bold text-white font-mono">{{ $tx->reference_code }}</div>
-                                    <div class="text-[10px] text-slate-400 font-readex">
+                                <div class="min-w-0">
+                                    <div class="font-bold text-white font-mono truncate">{{ $tx->reference_code }}</div>
+                                    <div class="text-[10px] text-slate-400 font-cairo">
                                         {{ $tx->type === 'deposit' ? 'شحن رصيد' : 'حجز خدمة' }} · {{ $tx->payment_method }}
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="text-left font-mono">
+                            <div class="text-left font-mono shrink-0">
                                 <div class="font-extrabold {{ $tx->type === 'deposit' ? 'text-emerald-400' : 'text-slate-200' }}">
                                     {{ $tx->type === 'deposit' ? '+' : '-' }}{{ number_format($tx->amount, 2) }} EGP
                                 </div>
@@ -290,14 +288,14 @@
                     @endforeach
                 </div>
             @else
-                <div class="p-6 text-center text-xs text-slate-500 font-readex">
+                <div class="p-6 text-center text-xs text-slate-500 font-cairo">
                     لا توجد حركات مالية مسجلة بعد.
                 </div>
             @endif
         </div>
 
         <!-- Box 2: Recent Support Tickets -->
-        <div class="p-6 rounded-3xl glass-obsidian border border-obsidian-border space-y-5">
+        <div class="p-5 sm:p-6 rounded-3xl glass-obsidian border border-obsidian-border space-y-4">
             <div class="flex items-center justify-between border-b border-obsidian-border/80 pb-3">
                 <h4 class="text-sm font-bold text-white font-cairo flex items-center gap-2">
                     <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -311,16 +309,16 @@
             </div>
 
             @if($recentTickets->count() > 0)
-                <div class="space-y-3">
+                <div class="space-y-2.5">
                     @foreach($recentTickets as $ticket)
                         <a href="{{ route('portal.tickets.show', $ticket) }}" 
                            class="p-3.5 rounded-xl bg-obsidian-surface border border-obsidian-border/60 hover:border-slate-600 flex items-center justify-between gap-3 text-xs transition-all block">
-                            <div>
+                            <div class="min-w-0">
                                 <div class="flex items-center gap-2">
                                     <span class="font-mono font-bold text-purple-300">{{ $ticket->ticket_number }}</span>
-                                    <span class="text-white font-bold font-cairo">{{ $ticket->subject }}</span>
+                                    <span class="text-white font-bold font-cairo truncate">{{ $ticket->subject }}</span>
                                 </div>
-                                <div class="text-[10px] text-slate-400 font-readex mt-1">
+                                <div class="text-[10px] text-slate-400 font-cairo mt-1">
                                     قسم: <strong class="text-slate-300">{{ $ticket->department }}</strong>
                                     · {{ $ticket->created_at->diffForHumans() }}
                                 </div>
@@ -338,7 +336,7 @@
                     @endforeach
                 </div>
             @else
-                <div class="p-6 text-center text-xs text-slate-500 font-readex">
+                <div class="p-6 text-center text-xs text-slate-500 font-cairo">
                     لا توجد تذاكر دعم فني مفتوحة حالياً. فريقنا في خدمتك دائماً!
                 </div>
             @endif

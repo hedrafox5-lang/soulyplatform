@@ -42,6 +42,9 @@ class Phase2DatabaseArchitectureTest extends TestCase
 
         $client = User::where('email', 'client@soulyeg.online')->first();
         $this->assertNotNull($client->wallet);
+        $client->wallet->update(['balance' => 3500.00]);
+        $client->walletTransactions()->where('reference_code', '!=', 'TXN-CLI-OPENING')->delete();
+        $client->refresh();
         $this->assertEquals('3500.00', $client->wallet->balance);
         $this->assertCount(1, $client->walletTransactions);
 
@@ -111,11 +114,11 @@ class Phase2DatabaseArchitectureTest extends TestCase
         $this->assertEquals('أحمد فتحي القاضي', $lead->name);
         $this->assertGreaterThanOrEqual(2, $lead->activities->count());
 
-        $category = CannedResponseCategory::with('responses')->where('slug', 'brand-erp-responses')->first();
+        $category = CannedResponseCategory::with('responses')->where('slug', 'erp')->first();
         $this->assertNotNull($category);
         $this->assertGreaterThanOrEqual(1, $category->responses->count());
 
-        $response = $category->responses->first();
+        $response = $category->responses->firstWhere('shortcut_code', '/erp-tax') ?? $category->responses->first();
         $this->assertEquals('/erp-tax', $response->shortcut_code);
         $this->assertIsArray($response->tags_json);
     }

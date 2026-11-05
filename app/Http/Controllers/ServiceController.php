@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ErpStoreCatalog;
 use App\Models\Service;
 use App\Models\ServicePackage;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class ServiceController extends Controller
 {
@@ -14,11 +16,22 @@ class ServiceController extends Controller
      */
     public function index(Request $request): View
     {
+        $serviceIds = Cache::remember('souly_catalog_v1_ids', 3600, function () {
+            return Service::where('is_active', true)
+                ->orderBy('display_order')
+                ->pluck('id')
+                ->toArray();
+        });
+
+        if (!is_array($serviceIds) || empty($serviceIds)) {
+            $serviceIds = Service::where('is_active', true)->orderBy('display_order')->pluck('id')->toArray();
+        }
+
         $services = Service::with([
             'icons' => fn ($q) => $q->where('is_active', true)->orderBy('display_order'),
             'packages' => fn ($q) => $q->where('is_active', true)->orderBy('display_order'),
         ])
-        ->where('is_active', true)
+        ->whereIn('id', $serviceIds)
         ->orderBy('display_order')
         ->get();
 
@@ -43,7 +56,17 @@ class ServiceController extends Controller
             ->orderBy('display_order')
             ->get();
 
-        return view('pages.services.show', compact('service', 'otherServices'));
+        // Pass ERP store catalog to brand-erp service page
+        $erpCatalog = null;
+        if ($service->slug === 'brand-erp') {
+            $erpCatalog = ErpStoreCatalog::active()
+                ->orderBy('tier')
+                ->orderBy('display_order')
+                ->get()
+                ->groupBy('tier');
+        }
+
+        return view('pages.services.show', compact('service', 'otherServices', 'erpCatalog'));
     }
 
     /**
@@ -65,5 +88,23 @@ class ServiceController extends Controller
             ->get();
 
         return view('pages.services.package', compact('service', 'package', 'relatedPackages'));
+    }
+
+    /**
+     * Display the standalone BrandERP Modular Store page.
+     */
+    public function storeBranderp(): View
+    {
+        $service = Service::where('slug', 'brand-erp')
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $erpCatalog = ErpStoreCatalog::active()
+            ->orderBy('tier')
+            ->orderBy('display_order')
+            ->get()
+            ->groupBy('tier');
+
+        return view('pages.store.branderp', compact('service', 'erpCatalog'));
     }
 }

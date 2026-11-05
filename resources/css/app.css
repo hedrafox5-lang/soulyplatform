@@ -6,6 +6,150 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Cairo', 'Tahoma', ui-sans-serif, system-ui, sans-serif;
+    --font-cairo: 'Cairo', 'Tahoma', sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    --color-obsidian-base: #05050A;
+    --color-obsidian-surface: #0B0C16;
+    --color-obsidian-card: #121422;
+    --color-obsidian-border: #1C1F36;
+    --color-obsidian-muted: #2A2E4D;
+
+    --color-cyber-cyan: #00F5D4;
+    --color-cyber-gold: #FFB800;
+    --color-cyber-purple: #7B2CBF;
+    --color-cyber-emerald: #10B981;
+    --color-cyber-crimson: #FF2A55;
+}
+
+/* =========================================================================
+   SOULY DIGITAL CITADEL - GLOBAL LUXURY GLASS & BUTTON SYSTEM
+   ========================================================================= */
+
+:root {
+    --obsidian-base: #05050A;
+    --obsidian-surface: #0B0C16;
+    --obsidian-card: #121422;
+    --obsidian-border: #1C1F36;
+    --cyber-cyan: #00F5D4;
+    --cyber-gold: #FFB800;
+    --cyber-purple: #7B2CBF;
+    --cyber-emerald: #10B981;
+    --cyber-crimson: #FF2A55;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+/* Primary Citadel Button (Glowing Cyan-to-Teal) */
+.btn-citadel-primary,
+.btn-souly-primary {
+    background: linear-gradient(135deg, #00F5D4 0%, #00BB9B 100%);
+    color: #05050A !important;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 800;
+    border: 1px solid rgba(0, 245, 212, 0.6);
+    box-shadow: 0 4px 20px -2px rgba(0, 245, 212, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-citadel-primary:hover,
+.btn-souly-primary:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 6px 26px rgba(0, 245, 212, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+}
+
+/* Secondary Glassmorphic Citadel Button */
+.btn-citadel-secondary,
+.btn-souly-outline {
+    background: rgba(18, 20, 34, 0.85);
+    color: #E2E8F0;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    border: 1px solid rgba(0, 245, 212, 0.3);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    transition: all 0.25s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-citadel-secondary:hover,
+.btn-souly-outline:hover {
+    background: rgba(0, 245, 212, 0.12);
+    color: #00F5D4;
+    border-color: rgba(0, 245, 212, 0.6);
+}
+
+/* Gold Executive Button */
+.btn-citadel-gold {
+    background: linear-gradient(135deg, #FFB800 0%, #E09F00 100%);
+    color: #05050A !important;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 800;
+    border: 1px solid rgba(255, 184, 0, 0.6);
+    box-shadow: 0 4px 20px -2px rgba(255, 184, 0, 0.35);
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+
+.btn-citadel-gold:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+
+.btn-souly-compact {
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+}
+
+/* Portal Welcome Banner */
+.portal-welcome-banner {
+    background: linear-gradient(135deg, rgba(0, 245, 212, 0.12) 0%, rgba(18, 20, 34, 0.92) 50%, rgba(123, 44, 191, 0.16) 100%);
+    border: 1px solid rgba(0, 245, 212, 0.35);
+}
+
+/* Radial Cursor Spotlight Effect */
+.cursor-radial-glow {
+    position: relative;
+}
+
+.cursor-radial-glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0, 245, 212, 0.06), transparent 40%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Scrollbar Utilities */
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+
+/* Mobile Safe Area Support (iPhone Notch & Home Indicator) */
+.safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }

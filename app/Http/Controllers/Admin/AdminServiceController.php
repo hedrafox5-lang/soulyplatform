@@ -9,9 +9,20 @@ use App\Models\ServicePackage;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class AdminServiceController extends Controller
 {
+    /**
+     * Invalidate catalog caches to keep CPU low and sync immediately on edits.
+     */
+    protected function invalidateCatalogCaches(): void
+    {
+        Cache::forget('souly_catalog_v1');
+        Cache::forget('souly_catalog_v1_ids');
+        Cache::forget('souly_home_services_v1');
+        Cache::forget('souly_catalog_services_v1');
+    }
     /**
      * Display all Services with their packages and icons count.
      */
@@ -64,6 +75,8 @@ class AdminServiceController extends Controller
             'is_active' => true,
         ]);
 
+        $this->invalidateCatalogCaches();
+
         return back()->with('citadel_toast', [
             'type' => 'success',
             'message' => 'تم إضافة الباقة الجديدة بنجاح!'
@@ -89,6 +102,7 @@ class AdminServiceController extends Controller
         ]);
 
         $package->update($validated);
+        $this->invalidateCatalogCaches();
 
         return back()->with('citadel_toast', [
             'type' => 'success',
@@ -102,6 +116,7 @@ class AdminServiceController extends Controller
     public function deletePackage(ServicePackage $package): RedirectResponse
     {
         $package->delete();
+        $this->invalidateCatalogCaches();
 
         return back()->with('citadel_toast', [
             'type' => 'info',
@@ -136,6 +151,8 @@ class AdminServiceController extends Controller
             'is_active' => true,
         ]);
 
+        $this->invalidateCatalogCaches();
+
         return back()->with('citadel_toast', [
             'type' => 'success',
             'message' => 'تم إضافة الأيقونة التفاعلية بنجاح!'
@@ -148,6 +165,7 @@ class AdminServiceController extends Controller
     public function deleteIcon(ServiceIcon $icon): RedirectResponse
     {
         $icon->delete();
+        $this->invalidateCatalogCaches();
 
         return back()->with('citadel_toast', [
             'type' => 'info',

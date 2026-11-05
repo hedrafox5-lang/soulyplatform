@@ -33,9 +33,9 @@ class Phase4ServiceCatalogAndHomeTest extends TestCase
         $this->assertNotNull($cyber);
         $this->assertEquals(7, $cyber->packages()->count());
         $this->assertGreaterThanOrEqual(14, $cyber->icons()->count());
-        // Verify pricing range (350 to 2500)
-        $this->assertEquals('350.00', $cyber->packages()->where('slug', 'personal-shield')->first()->price);
-        $this->assertEquals('2500.00', $cyber->packages()->where('slug', 'enterprise-cyber-fortress')->first()->price);
+        // Verify pricing range (700 to 5000)
+        $this->assertEquals('700.00', $cyber->packages()->where('slug', 'personal-shield')->first()->price);
+        $this->assertEquals('5000.00', $cyber->packages()->where('slug', 'enterprise-cyber-fortress')->first()->price);
 
         // 4. Maintenance
         $maint = Service::where('slug', 'maintenance')->first();
@@ -43,8 +43,8 @@ class Phase4ServiceCatalogAndHomeTest extends TestCase
         $this->assertEquals(3, $maint->packages()->count());
         $this->assertGreaterThanOrEqual(14, $maint->icons()->count());
         $revivePkg = $maint->packages()->where('slug', 'revive')->first();
-        $this->assertEquals('400.00', $revivePkg->price);
-        $this->assertEquals('800.00', $revivePkg->original_price);
+        $this->assertEquals('1200.00', $revivePkg->price);
+        $this->assertEquals('2400.00', $revivePkg->original_price);
         $this->assertEquals(3, $revivePkg->min_units);
 
         // 5. Business Consulting

@@ -18,9 +18,23 @@ class Ticket extends Model
         'assigned_to',
         'subject',
         'department',
+        'department_scope',
+        'reference_code',
         'priority',
         'status',
     ];
+
+    public function getScopeLabelArAttribute(): string
+    {
+        return match ($this->department_scope) {
+            'branderp_store'    => 'منظومة ومتجر BrandERP',
+            'hardware_store'    => 'متجر قطع الهاردوير والأجهزة',
+            'services_bookings' => 'متجر الحجوزات والخدمات الميدانية',
+            'academy_courses'   => 'أكاديمية سولي والكورسات',
+            'wallet_billing'    => 'المحفظة الرقمية والمدفوعات',
+            default             => 'الدعم الفني العام',
+        };
+    }
 
     public function user(): BelongsTo
     {
@@ -33,6 +47,11 @@ class Ticket extends Model
     }
 
     public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function assignedStaff(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
     }

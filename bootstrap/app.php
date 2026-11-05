@@ -14,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'staff_or_admin' => \App\Http\Middleware\EnsureStaffOrAdmin::class,
         ]);
+        $middleware->validateCsrfTokens(except: [
+            'api/paymob/webhook',
+            'api/ai/chat',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

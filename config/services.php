@@ -37,18 +37,30 @@ return [
 
     'pinecone' => [
         'api_key' => env('PINECONE_API_KEY'),
-        'host' => env('PINECONE_HOST'),
+        'host' => env('PINECONE_INDEX_HOST', env('PINECONE_HOST')),
         'index' => env('PINECONE_INDEX', 'souly-knowledge-v1'),
+        'dimension' => (int) env('PINECONE_DIMENSION', 768),
     ],
 
     'gemini' => [
-        'api_key' => env('GEMINI_API_KEY'),
-        'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
+        'api_key' => env('GEMINI_API_KEY_PRIMARY', env('GEMINI_API_KEY')),
+        'api_key_primary' => env('GEMINI_API_KEY_PRIMARY', env('GEMINI_API_KEY')),
+        'api_key_secondary' => env('GEMINI_API_KEY_SECONDARY'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+        'embedding_model' => env('GEMINI_EMBEDDING_MODEL', 'gemini-embedding-001'),
     ],
 
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
         'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+    ],
+
+    'paymob' => [
+        'api_key' => env('PAYMOB_API_KEY'),
+        'integration_id' => env('PAYMOB_INTEGRATION_ID'),
+        'iframe_id' => env('PAYMOB_IFRAME_ID'),
+        'hmac_secret' => env('PAYMOB_HMAC_SECRET'),
+        'currency' => env('PAYMOB_CURRENCY', 'EGP'),
     ],
 
 ];

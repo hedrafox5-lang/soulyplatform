@@ -13,10 +13,14 @@ class AiConversation extends Model
 
     protected $fillable = [
         'session_uuid',
+        'visitor_uuid',
+        'visitor_name',
+        'device_fingerprint',
         'user_id',
         'lead_id',
         'device_type',
         'detected_intent',
+        'summary',
         'pinecone_namespace',
         'is_escalated',
     ];

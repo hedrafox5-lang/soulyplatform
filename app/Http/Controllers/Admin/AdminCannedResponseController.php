@@ -30,6 +30,25 @@ class AdminCannedResponseController extends Controller
     }
 
     /**
+     * Return JSON data for the Floating Staff Quick-Replies Drawer.
+     */
+    public function apiList(): JsonResponse
+    {
+        $categories = CannedResponseCategory::orderBy('display_order')->get(['id', 'name', 'slug', 'accent_color']);
+
+        $responses = CannedResponse::with('category:id,name,accent_color')
+            ->where('is_active', true)
+            ->orderBy('usage_count', 'desc')
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'categories' => $categories,
+            'responses' => $responses,
+        ]);
+    }
+
+    /**
      * Increment usage counter on copy via AJAX.
      */
     public function incrementUsage(CannedResponse $response): JsonResponse
@@ -46,7 +65,7 @@ class AdminCannedResponseController extends Controller
     /**
      * Store new Canned Response.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'category_id' => ['required', 'exists:canned_response_categories,id'],
@@ -61,7 +80,7 @@ class AdminCannedResponseController extends Controller
             $tagsArray = array_map('trim', explode(',', $validated['tags']));
         }
 
-        CannedResponse::create([
+        $canned = CannedResponse::create([
             'category_id' => $validated['category_id'],
             'title' => $validated['title'],
             'shortcut_code' => $validated['shortcut_code'],
@@ -71,6 +90,16 @@ class AdminCannedResponseController extends Controller
             'created_by' => auth()->id(),
             'is_active' => true,
         ]);
+
+        $canned->load('category:id,name,accent_color');
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'تم حفظ الرد الجاهز الجديد بنجاح في الخزينة!',
+                'response' => $canned,
+            ]);
+        }
 
         return back()->with('citadel_toast', [
             'type' => 'success',

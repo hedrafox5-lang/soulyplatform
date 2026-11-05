@@ -2,50 +2,52 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\Booking;
-use App\Models\Lead;
+use App\Models\ClientDevice;
+use App\Models\ErpOrder;
+use App\Models\HardwareOrder;
+use App\Models\Package;
+use App\Models\PromoCode;
+use App\Models\PromoCodeUsage;
 use App\Models\Service;
-use App\Models\ServicePackage;
+use App\Models\Setting;
 use App\Models\Ticket;
 use App\Models\TicketMessage;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
+use App\Services\SoulyNotificationService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ClientPortalController extends Controller
 {
     /**
-     * Client Portal Main Overview Dashboard.
+     * Client Portal main dashboard summary.
      */
     public function index(): View
     {
         $user = Auth::user();
-        $wallet = $user->walletOrCreate();
 
-        $activeBookingsCount = Booking::where('user_id', $user->id)
-            ->whereIn('status', ['new', 'confirmed', 'in_progress'])
-            ->count();
+        $wallet = Wallet::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'cash_balance'  => 0.00,
+                'bonus_balance' => 0.00,
+                'currency'      => 'EGP',
+                'is_locked'     => false,
+            ]
+        );
 
-        $completedBookingsCount = Booking::where('user_id', $user->id)
-            ->where('status', 'completed')
-            ->count();
-
-        $openTicketsCount = Ticket::where('user_id', $user->id)
-            ->whereIn('status', ['open', 'staff_replied', 'client_replied'])
-            ->count();
-
-        $recentBookings = Booking::with(['service', 'package'])
-            ->where('user_id', $user->id)
-            ->latest()
-            ->take(5)
-            ->get();
-
-        $recentTickets = Ticket::where('user_id', $user->id)
+        $activeBookings = Booking::where('user_id', $user->id)
+            ->with(['service', 'package'])
             ->latest()
             ->take(5)
             ->get();
@@ -55,373 +57,515 @@ class ClientPortalController extends Controller
             ->take(5)
             ->get();
 
+        $recentTickets = Ticket::where('user_id', $user->id)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $devicesCount = ClientDevice::where('user_id', $user->id)->count();
+        $erpOrdersCount = ErpOrder::where('user_id', $user->id)->where('status', 'active')->count();
+
         return view('portal.index', compact(
             'user',
             'wallet',
-            'activeBookingsCount',
-            'completedBookingsCount',
-            'openTicketsCount',
-            'recentBookings',
+            'activeBookings',
+            'recentTransactions',
             'recentTickets',
-            'recentTransactions'
+            'devicesCount',
+            'erpOrdersCount'
         ));
     }
 
     /**
-     * Client Wallet & Transactions Ledger.
+     * Digital wallet balance, dual ledger, and payment gateway info.
      */
     public function wallet(): View
     {
         $user = Auth::user();
-        $wallet = $user->walletOrCreate();
+        $wallet = Wallet::firstOrCreate(
+            ['user_id' => $user->id],
+            ['cash_balance' => 0.00, 'bonus_balance' => 0.00, 'currency' => 'EGP', 'is_locked' => false]
+        );
 
         $transactions = WalletTransaction::where('user_id', $user->id)
             ->latest()
             ->paginate(15);
 
-        return view('portal.wallet', compact('user', 'wallet', 'transactions'));
+        // Fetch live gateway account numbers from dynamic settings
+        $gateways = [
+            'vodafone_cash' => Setting::get('payment_vodafone_cash', '01090623326'),
+            'instapay'      => Setting::get('payment_instapay', 'souly@instapay'),
+            'bank_account'  => Setting::get('payment_bank_account', 'CIB Bank - 100054896231'),
+        ];
+
+        return view('portal.wallet', compact('user', 'wallet', 'transactions', 'gateways'));
     }
 
     /**
-     * Submit Top-up / Deposit request to Souly Wallet.
+     * Submit wallet top-up request with payment proof or initiate online payment.
      */
     public function deposit(Request $request): RedirectResponse
     {
-        $user = Auth::user();
-        $wallet = $user->walletOrCreate();
-
         $validated = $request->validate([
-            'amount' => ['required', 'numeric', 'min:50', 'max:1000000'],
-            'payment_method' => ['required', 'string', 'in:vodafone_cash,instapay,bank_transfer'],
+            'amount'                   => ['required', 'numeric', 'min:50', 'max:100000'],
+            'gateway'                  => ['required', 'string', 'in:vodafone_cash,instapay,bank_transfer,card'],
             'sender_number_or_account' => ['required', 'string', 'max:100'],
-            'receipt' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'receipt'                  => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
         ], [
-            'amount.required' => 'يرجى إدخال مبلغ الشحن المطلوب.',
-            'amount.min' => 'الحد الأدنى لشحن المحفظة هو 50 ج.م.',
-            'payment_method.required' => 'يرجى اختيار وسيلة التحويل.',
-            'sender_number_or_account.required' => 'يرجى إدخال رقم المحفظة أو الحساب المحول منه.',
-            'receipt.mimes' => 'صيغة الإيصال يجب أن تكون صورة (JPG, PNG) أو ملف PDF.',
-            'receipt.max' => 'حجم ملف الإيصال يجب ألا يتجاوز 5 ميجابايت.',
+            'amount.min'                   => 'الحد الأدنى لشحن المحفظة هو 50 ج.م.',
+            'sender_number_or_account.required' => 'يرجى إدخال رقم المحفظة أو الحساب الذي قمت بالتحويل منه.',
         ]);
 
+        $user = Auth::user();
         $receiptPath = null;
+
         if ($request->hasFile('receipt')) {
-            $receiptPath = $request->file('receipt')->store('receipts', 'public');
+            $receiptPath = $request->file('receipt')->store('wallet_receipts/' . $user->id, 'public');
         }
 
-        $referenceCode = 'DEP-' . strtoupper(Str::random(8));
+        try {
+            DB::transaction(function () use ($user, $validated, $receiptPath) {
+                $wallet = Wallet::firstOrCreate(['user_id' => $user->id]);
 
-        WalletTransaction::create([
-            'wallet_id' => $wallet->id,
-            'user_id' => $user->id,
-            'reference_code' => $referenceCode,
-            'type' => 'deposit',
-            'amount' => $validated['amount'],
-            'payment_method' => $validated['payment_method'],
-            'sender_number_or_account' => $validated['sender_number_or_account'],
-            'receipt_path' => $receiptPath,
-            'status' => 'pending',
-            'admin_notes' => 'طلب شحن محفظة بانتظار مراجعة الإدارة وتأكيد التحويل.',
+                WalletTransaction::create([
+                    'wallet_id'                => $wallet->id,
+                    'user_id'                  => $user->id,
+                    'reference'                => 'DEP-' . date('ymd') . '-' . strtoupper(Str::random(6)),
+                    'type'                     => 'deposit',
+                    'amount'                   => (float)$validated['amount'],
+                    'currency'                 => 'EGP',
+                    'payment_method'           => $validated['gateway'],
+                    'sender_number_or_account' => strip_tags(trim($validated['sender_number_or_account'])),
+                    'receipt_image'            => $receiptPath,
+                    'status'                   => 'pending',
+                    'description'              => "طلب شحن رصيد نقدي عبر {$validated['gateway']}",
+                ]);
+            });
+
+            SoulyNotificationService::sendToAdmins(
+                'wallet',
+                'طلب شحن محفظة جديد 💳',
+                "طلب شحن بقيمة {$validated['amount']} ج.م من العميل {$user->name}",
+                route('admin.wallets.index'),
+                'credit-card'
+            );
+
+            return redirect()->route('portal.wallet')
+                             ->with('citadel_toast', 'تم إرسال طلب الشحن بنجاح، جاري التحقق من التحويل وإضافة الرصيد.');
+
+        } catch (\Throwable $e) {
+            Log::error('Wallet Deposit Error: ' . $e->getMessage());
+            return back()->with('error', 'حدث خطأ أثناء معالجة طلب الإيداع، يرجى المحاولة لاحقاً.')->withInput();
+        }
+    }
+
+    /**
+     * Apply conditional promotional code or bonus wallet voucher.
+     */
+    public function applyPromo(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'code'      => ['required', 'string', 'max:50'],
+            'sector'    => ['required', 'string', 'in:maintenance,cyber_shield,hardware,branderp,wallet_bonus'],
+            'subtotal'  => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        return redirect()->route('portal.wallet')->with('citadel_toast', [
-            'type' => 'success',
-            'message' => "تم تسجيل طلب شحن المحفظة بنجاح برقم مرجعي ({$referenceCode}). سيتم التأكيد وإضافة الرصيد فور المراجعة."
+        $code = strtoupper(trim($validated['code']));
+        $user = Auth::user();
+        $subtotal = (float)($validated['subtotal'] ?? 0);
+
+        $promo = PromoCode::where('code', $code)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$promo) {
+            return response()->json(['success' => false, 'message' => 'كود الخصم غير صحيح أو غير مفعل.'], 404);
+        }
+
+        // Check expiration
+        if ($promo->expires_at && $promo->expires_at->isPast()) {
+            return response()->json(['success' => false, 'message' => 'عفواً، انتهت صلاحية هذا الكود.'], 422);
+        }
+
+        // Check usage limits per user
+        $userUsageCount = PromoCodeUsage::where('promo_code_id', $promo->id)
+            ->where('user_id', $user->id)
+            ->count();
+
+        $maxPerUser = $promo->max_uses_per_user ?? 1;
+        if ($userUsageCount >= $maxPerUser) {
+            return response()->json(['success' => false, 'message' => 'لقد استنفدت الحد المسموح لاستخدام هذا الكود.'], 422);
+        }
+
+        // Check sector eligibility
+        if ($promo->target_sector !== 'all' && $promo->target_sector !== $validated['sector']) {
+            return response()->json(['success' => false, 'message' => 'هذا الكود غير مخصص لهذا القطاع أو الخدمة.'], 422);
+        }
+
+        // Check minimum subtotal requirement
+        if ($promo->min_order_amount && $subtotal < (float)$promo->min_order_amount) {
+            return response()->json([
+                'success' => false,
+                'message' => "يشترط هذا الكود حداً أدنى للطلب قدره " . number_format($promo->min_order_amount, 2) . " ج.م."
+            ], 422);
+        }
+
+        // Calculate discount amount
+        $discountAmount = 0.00;
+        if ($promo->type === 'percentage') {
+            $discountAmount = ($subtotal * ((float)$promo->value / 100));
+            if ($promo->max_discount_amount) {
+                $discountAmount = min($discountAmount, (float)$promo->max_discount_amount);
+            }
+        } elseif ($promo->type === 'fixed') {
+            $discountAmount = min((float)$promo->value, $subtotal);
+        } elseif ($promo->type === 'wallet_bonus') {
+            // Instant bonus balance injection with usage rules
+            DB::transaction(function () use ($user, $promo) {
+                $wallet = Wallet::where('user_id', $user->id)->lockForUpdate()->firstOrFail();
+                $wallet->increment('bonus_balance', (float)$promo->value);
+
+                PromoCodeUsage::create([
+                    'promo_code_id' => $promo->id,
+                    'user_id'       => $user->id,
+                    'amount_used'   => (float)$promo->value,
+                ]);
+
+                WalletTransaction::create([
+                    'wallet_id'   => $wallet->id,
+                    'user_id'     => $user->id,
+                    'reference'   => 'BONUS-' . strtoupper(Str::random(6)),
+                    'type'        => 'bonus_credit',
+                    'amount'      => (float)$promo->value,
+                    'currency'    => 'EGP',
+                    'status'      => 'completed',
+                    'description' => "شحن رصيد ترويجي مجاني عبر الكود ({$promo->code})",
+                ]);
+            });
+
+            return response()->json([
+                'success' => true,
+                'type'    => 'wallet_bonus',
+                'message' => "تم شحن {$promo->value} ج.م رصيد ترويجي مجاني في محفظتك بنجاح!",
+            ]);
+        }
+
+        return response()->json([
+            'success'         => true,
+            'code'            => $promo->code,
+            'discount_amount' => round($discountAmount, 2),
+            'final_total'     => max(0, round($subtotal - $discountAmount, 2)),
+            'message'         => 'تم تطبيق كود الخصم بنجاح.',
         ]);
     }
 
     /**
-     * Client Bookings List & Booking Engine.
+     * List user bookings with status filtering.
      */
     public function bookings(Request $request): View
     {
         $user = Auth::user();
-        $query = Booking::with(['service', 'package'])->where('user_id', $user->id);
+        $query = Booking::where('user_id', $user->id)->with(['service', 'package']);
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $query->where('status', $request->query('status'));
         }
 
         $bookings = $query->latest()->paginate(10);
+        $totalCount = Booking::where('user_id', $user->id)->count();
 
-        // Pre-load active services and packages for the booking creator modal
-        $services = Service::with(['packages' => fn ($q) => $q->where('is_active', true)->orderBy('display_order')])
-            ->where('is_active', true)
-            ->orderBy('display_order')
-            ->get();
-
-        $wallet = $user->walletOrCreate();
-
-        return view('portal.bookings', compact('user', 'wallet', 'bookings', 'services'));
+        return view('portal.bookings', compact('user', 'bookings', 'totalCount'));
     }
 
     /**
-     * Process Instant Service Booking.
+     * Store a service booking from client portal with server-side pricing and atomic wallet checkout.
      */
     public function storeBooking(Request $request): RedirectResponse
     {
-        $user = Auth::user();
-        $wallet = $user->walletOrCreate();
-
         $validated = $request->validate([
-            'service_id' => ['required', 'exists:services,id'],
-            'service_package_id' => ['nullable', 'exists:service_packages,id'],
-            'quantity_or_hours' => ['required', 'integer', 'min:1', 'max:1000'],
-            'payment_method' => ['required', 'string', 'in:wallet,direct_transfer,on_site'],
-            'scheduled_at' => ['nullable', 'date'],
-            'client_requirements' => ['nullable', 'string', 'max:3000'],
-        ], [
-            'service_id.required' => 'يرجى اختيار الخدمة المطلوبة.',
-            'quantity_or_hours.required' => 'يرجى تحديد عدد الساعات أو الوحدات.',
-            'payment_method.required' => 'يرجى تحديد طريقة الدفع.',
+            'service_id'     => ['required', 'exists:services,id'],
+            'package_id'     => ['nullable', 'exists:packages,id'],
+            'scheduled_at'   => ['nullable', 'date', 'after_or_equal:today'],
+            'preferred_time' => ['nullable', 'string', 'max:50'],
+            'address'        => ['nullable', 'string', 'max:500'],
+            'payment_method' => ['required', 'in:cash,wallet,bank_transfer'],
+            'notes'          => ['nullable', 'string', 'max:1000'],
+            'promo_code'     => ['nullable', 'string', 'max:50'],
         ]);
 
+        $user = Auth::user();
         $service = Service::findOrFail($validated['service_id']);
-        $package = null;
-        if (!empty($validated['service_package_id'])) {
-            $package = ServicePackage::where('service_id', $service->id)
-                ->where('id', $validated['service_package_id'])
-                ->firstOrFail();
+        $package = !empty($validated['package_id']) ? Package::findOrFail($validated['package_id']) : null;
+
+        $isFieldVisit = in_array($service->sector, ['engineering_maintenance', 'cyber_shield'], true);
+        if (!$isFieldVisit && ($request->filled('scheduled_at') || $request->filled('preferred_time'))) {
+            return back()->with('error', 'المواعيد والزيارات الميدانية مقتصرة فقط على قطاعي الصيانة والأمن السيبراني.')->withInput();
         }
 
-        // Calculate total price
-        $units = (int) $validated['quantity_or_hours'];
-        if ($package) {
-            if ($package->billing_type === 'hourly' || $package->min_units > 1) {
-                $totalAmount = (float) $package->price * $units;
-            } else {
-                $totalAmount = (float) $package->price;
+        $subtotal = $package ? (float)$package->price : (float)($service->base_price ?? 0.00);
+        $discount = 0.00;
+
+        // Process promo code if provided
+        if (!empty($validated['promo_code'])) {
+            $promo = PromoCode::where('code', strtoupper(trim($validated['promo_code'])))
+                ->where('is_active', true)
+                ->first();
+
+            if ($promo && (!$promo->expires_at || $promo->expires_at->isFuture())) {
+                $discount = $promo->type === 'percentage' 
+                    ? ($subtotal * ((float)$promo->value / 100))
+                    : min((float)$promo->value, $subtotal);
             }
-        } else {
-            // Default hourly fallback or baseline
-            $totalAmount = 500.00 * $units;
         }
 
-        $bookingNumber = 'BKG-' . strtoupper(Str::random(8));
+        $finalTotal = max(0, round($subtotal - $discount, 2));
 
-        // Payment Handling
-        if ($validated['payment_method'] === 'wallet') {
-            // Atomic DB Transaction with row lock
-            try {
-                DB::transaction(function () use ($user, $service, $package, $units, $totalAmount, $bookingNumber, $validated) {
-                    $lockedWallet = Wallet::where('user_id', $user->id)->lockForUpdate()->firstOrFail();
+        try {
+            $booking = DB::transaction(function () use ($user, $service, $package, $validated, $isFieldVisit, $finalTotal) {
+                $bookingNumber = 'BK-' . date('ymd') . '-' . strtoupper(Str::random(5));
+                $paymentStatus = 'unpaid';
 
-                    if ((float) $lockedWallet->balance < (float) $totalAmount) {
-                        throw new \Exception("insufficient_balance");
+                if ($validated['payment_method'] === 'wallet') {
+                    $wallet = Wallet::where('user_id', $user->id)->lockForUpdate()->firstOrFail();
+
+                    if ((float)$wallet->cash_balance < $finalTotal) {
+                        throw new \DomainException('رصيدك النقدي في المحفظة غير كافٍ لسداد قيمة الحجز.');
                     }
 
-                    // 1. Deduct balance
-                    $lockedWallet->decrement('balance', $totalAmount);
+                    $wallet->decrement('cash_balance', $finalTotal);
 
-                    // 2. Create Wallet Purchase Transaction
                     WalletTransaction::create([
-                        'wallet_id' => $lockedWallet->id,
-                        'user_id' => $user->id,
-                        'reference_code' => 'PUR-' . strtoupper(Str::random(8)),
-                        'type' => 'purchase',
-                        'amount' => $totalAmount,
-                        'payment_method' => 'wallet_balance',
-                        'sender_number_or_account' => "محفظة سولي: {$user->email}",
-                        'status' => 'approved',
-                        'admin_notes' => "خصم تلقائي فوري لحجز الخدمة: {$bookingNumber} ({$service->name})",
+                        'wallet_id'   => $wallet->id,
+                        'user_id'     => $user->id,
+                        'reference'   => $bookingNumber,
+                        'type'        => 'payment',
+                        'amount'      => $finalTotal,
+                        'currency'    => 'EGP',
+                        'status'      => 'completed',
+                        'description' => "سداد قيمة حجز الخدمة ({$service->name_ar})",
                     ]);
 
-                    // 3. Create Booking with confirmed & paid status
-                    Booking::create([
-                        'booking_number' => $bookingNumber,
-                        'user_id' => $user->id,
-                        'service_id' => $service->id,
-                        'service_package_id' => $package?->id,
-                        'quantity_or_hours' => $units,
-                        'total_amount' => $totalAmount,
-                        'payment_method' => 'wallet',
-                        'payment_status' => 'paid',
-                        'status' => 'confirmed',
-                        'scheduled_at' => $validated['scheduled_at'] ?? now()->addDay(),
-                        'client_requirements' => $validated['client_requirements'] ?? null,
-                    ]);
-                });
-
-                return redirect()->route('portal.bookings')->with('citadel_toast', [
-                    'type' => 'success',
-                    'message' => "تم تأكيد الحجز الفوري بنجاح برقم ({$bookingNumber}) وخُصم المبلغ ({$totalAmount} ج.م) من محفظتك!"
-                ]);
-
-            } catch (\Exception $e) {
-                if ($e->getMessage() === 'insufficient_balance') {
-                    $currentBalance = number_format($wallet->balance, 2);
-                    $needed = number_format($totalAmount - $wallet->balance, 2);
-                    return back()->withInput()->withErrors([
-                        'payment_method' => "رصيد محفظتك غير كافٍ لإتمام الحجز الفوري. الرصيد الحالي: {$currentBalance} ج.م، والمبلغ المطلوب: {$totalAmount} ج.م (المتبقي للشحن: {$needed} ج.م).",
-                    ]);
+                    $paymentStatus = 'paid';
                 }
-                throw $e;
-            }
+
+                return Booking::create([
+                    'booking_number' => $bookingNumber,
+                    'user_id'        => $user->id,
+                    'service_id'     => $service->id,
+                    'package_id'     => $package?->id,
+                    'is_field_visit' => $isFieldVisit,
+                    'preferred_date' => $isFieldVisit ? ($validated['scheduled_at'] ?? null) : null,
+                    'preferred_time' => $isFieldVisit ? ($validated['preferred_time'] ?? null) : null,
+                    'address'        => $validated['address'] ?? null,
+                    'total_amount'   => $finalTotal,
+                    'status'         => 'new',
+                    'payment_status' => $paymentStatus,
+                    'payment_method' => $validated['payment_method'],
+                    'notes'          => $validated['notes'] ?? null,
+                ]);
+            });
+
+            SoulyNotificationService::sendToAdmins(
+                'booking',
+                'حجز خدمة جديد 📅',
+                "طلب حجز جديد برقم {$booking->booking_number} للخدمة {$service->name_ar}",
+                route('admin.bookings.index'),
+                'calendar'
+            );
+
+            return redirect()->route('portal.bookings')
+                             ->with('citadel_toast', "تم تسجيل حجزك بنجاح برقم ({$booking->booking_number}).");
+
+        } catch (\DomainException $de) {
+            return back()->with('error', $de->getMessage())->withInput();
+        } catch (\Throwable $e) {
+            Log::error('Store Booking Error: ' . $e->getMessage());
+            return back()->with('error', 'حدث خطأ أثناء حفظ الحجز، يرجى إعادة المحاولة.')->withInput();
         }
-
-        // Direct Transfer or On-Site Payment
-        Booking::create([
-            'booking_number' => $bookingNumber,
-            'user_id' => $user->id,
-            'service_id' => $service->id,
-            'service_package_id' => $package?->id,
-            'quantity_or_hours' => $units,
-            'total_amount' => $totalAmount,
-            'payment_method' => $validated['payment_method'],
-            'payment_status' => 'pending_verification',
-            'status' => 'new',
-            'scheduled_at' => $validated['scheduled_at'] ?? now()->addDay(),
-            'client_requirements' => $validated['client_requirements'] ?? null,
-        ]);
-
-        // Capture/Update Lead for staff follow-up
-        Lead::create([
-            'name' => $user->name,
-            'phone' => $user->phone ?? '01000000000',
-            'email' => $user->email,
-            'company_name' => $user->company_name,
-            'interested_service_id' => $service->id,
-            'interested_package_id' => $package?->id,
-            'source' => 'website_booking',
-            'status' => 'new',
-            'notes' => "طلب حجز جديد برقم {$bookingNumber} بطريقة دفع: {$validated['payment_method']}. بانتظار التواصل والتأكيد.",
-        ]);
-
-        return redirect()->route('portal.bookings')->with('citadel_toast', [
-            'type' => 'success',
-            'message' => "تم تسجيل طلب الحجز بنجاح برقم ({$bookingNumber}). سيتواصل معك مهندس الحسابات فوراً لتأكيد الموعد وبيانات التنفيذ."
-        ]);
     }
 
     /**
-     * Client Support Tickets List.
+     * View official certified invoice for a completed booking.
      */
-    public function tickets(): View
+    public function invoice(Booking $booking): View
+    {
+        abort_if((int)$booking->user_id !== (int)Auth::id(), 403, 'غير مصرح بعرض هذه الفاتورة.');
+
+        $booking->load(['service', 'package', 'user']);
+        return view('portal.invoice', compact('booking'));
+    }
+
+    /**
+     * View digital warranty certificate for completed maintenance or cybersecurity services.
+     */
+    public function certificate(Booking $booking): View
+    {
+        abort_if((int)$booking->user_id !== (int)Auth::id(), 403, 'غير مصرح.');
+        abort_if($booking->status !== 'completed', 404, 'الشهادة تصدر حصراً بعد اكتمال الخدمة واعتمادها.');
+
+        $booking->load(['service', 'package', 'user']);
+        return view('portal.certificate', compact('booking'));
+    }
+
+    /**
+     * Support tickets list.
+     */
+    public function tickets(Request $request): View
     {
         $user = Auth::user();
-        $tickets = Ticket::with(['booking.service'])
-            ->where('user_id', $user->id)
-            ->latest()
-            ->paginate(12);
+        $query = Ticket::where('user_id', $user->id);
 
-        $userBookings = Booking::with('service')
-            ->where('user_id', $user->id)
-            ->latest()
-            ->get();
+        if ($request->filled('scope')) {
+            $query->where('department_scope', $request->query('scope'));
+        }
 
-        return view('portal.tickets', compact('user', 'tickets', 'userBookings'));
+        $tickets = $query->latest()->paginate(10);
+        return view('portal.tickets', compact('user', 'tickets'));
     }
 
     /**
-     * Open New Support Ticket.
+     * Store new support ticket.
      */
     public function storeTicket(Request $request): RedirectResponse
     {
+        $validated = $request->validate([
+            'subject'          => ['required', 'string', 'max:200'],
+            'priority'         => ['required', 'in:low,medium,high,critical'],
+            'department_scope' => ['required', 'string', 'in:general,maintenance,cyber_shield,branderp,hardware,billing'],
+            'booking_id'       => ['nullable', 'exists:bookings,id'],
+            'message'          => ['required', 'string', 'max:5000'],
+            'attachments'      => ['nullable', 'array', 'max:3'],
+            'attachments.*'    => ['file', 'mimes:jpeg,png,jpg,pdf,webp', 'max:5120'],
+        ]);
+
         $user = Auth::user();
 
-        $validated = $request->validate([
-            'subject' => ['required', 'string', 'max:255'],
-            'department' => ['required', 'string', 'in:erp,ai_agents,cybersecurity,maintenance,consulting,academy,billing'],
-            'priority' => ['required', 'string', 'in:low,medium,high,urgent'],
-            'booking_id' => ['nullable', 'exists:bookings,id'],
-            'message' => ['required', 'string', 'max:5000'],
-        ], [
-            'subject.required' => 'يرجى كتابة عنوان التذكرة.',
-            'department.required' => 'يرجى تحديد القسم المختص.',
-            'priority.required' => 'يرجى تحديد درجة الأولوية.',
-            'message.required' => 'يرجى كتابة تفاصيل الاستفسار أو المشكلة.',
-        ]);
+        $ticket = DB::transaction(function () use ($user, $validated, $request) {
+            $newTicket = Ticket::create([
+                'ticket_number'    => 'TCK-' . date('ymd') . '-' . strtoupper(Str::random(5)),
+                'user_id'          => $user->id,
+                'booking_id'       => $validated['booking_id'] ?? null,
+                'subject'          => strip_tags(trim($validated['subject'])),
+                'priority'         => $validated['priority'],
+                'department_scope' => $validated['department_scope'],
+                'status'           => 'open',
+            ]);
 
-        // Security check for booking ownership
-        if (!empty($validated['booking_id'])) {
-            $booking = Booking::where('id', $validated['booking_id'])->where('user_id', $user->id)->first();
-            if (!$booking) {
-                return back()->withErrors(['booking_id' => 'رقم الحجز غير صالح أو لا يتبع حسابك.']);
+            $attachmentPaths = [];
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $attachmentPaths[] = $file->store('ticket_attachments/' . $newTicket->id, 'public');
+                }
             }
-        }
 
-        $ticketNumber = 'TCK-' . strtoupper(Str::random(8));
+            TicketMessage::create([
+                'ticket_id'        => $newTicket->id,
+                'user_id'          => $user->id,
+                'message'          => strip_tags(trim($validated['message'])),
+                'attachments_json' => $attachmentPaths,
+                'is_internal_note' => false,
+            ]);
 
-        $ticket = Ticket::create([
-            'ticket_number' => $ticketNumber,
-            'user_id' => $user->id,
-            'booking_id' => $validated['booking_id'] ?? null,
-            'subject' => $validated['subject'],
-            'department' => $validated['department'],
-            'priority' => $validated['priority'],
-            'status' => 'open',
-        ]);
+            return $newTicket;
+        });
 
-        TicketMessage::create([
-            'ticket_id' => $ticket->id,
-            'user_id' => $user->id,
-            'message' => $validated['message'],
-            'is_internal_note' => false,
-        ]);
+        SoulyNotificationService::sendToAdmins(
+            'ticket',
+            'تذكرة دعم فني جديدة 🎫',
+            "تذكرة جديدة #{$ticket->ticket_number} من العميل {$user->name}",
+            route('admin.tickets.index'),
+            'chat-bubble-left-right'
+        );
 
-        return redirect()->route('portal.tickets.show', $ticket)->with('citadel_toast', [
-            'type' => 'success',
-            'message' => "تم فتح التذكرة بنجاح برقم ({$ticketNumber}). سيتولى مهندس الدعم الرد عليك في أقرب وقت."
-        ]);
+        return redirect()->route('portal.tickets.show', $ticket->id)
+                         ->with('citadel_toast', 'تم فتح تذكرة الدعم الفني بنجاح.');
     }
 
     /**
-     * View Single Ticket & Live Message Thread.
+     * Show ticket conversation strictly hiding internal admin notes from clients.
      */
     public function showTicket(Ticket $ticket): View
     {
-        $user = Auth::user();
-
-        // Authorization check
-        if ($ticket->user_id !== $user->id && !in_array($user->role, ['admin', 'staff'])) {
-            abort(403, 'غير مصرح لك بمشاهدة هذه التذكرة.');
-        }
+        abort_if((int)$ticket->user_id !== (int)Auth::id(), 403, 'غير مصرح لك بعرض هذه التذكرة.');
 
         $ticket->load([
-            'messages.user',
-            'booking.service',
-            'booking.package',
-            'assignedStaff',
+            'user',
+            'messages' => function ($q) {
+                // Strictly filter out internal admin notes to prevent data leakage
+                $q->where('is_internal_note', false)->with('user')->orderBy('created_at', 'asc');
+            }
         ]);
 
-        return view('portal.ticket-detail', compact('user', 'ticket'));
+        return view('portal.ticket-detail', compact('ticket'));
     }
 
     /**
-     * Post a Reply in Ticket Thread.
+     * Post a client reply to an existing ticket.
      */
     public function replyTicket(Request $request, Ticket $ticket): RedirectResponse
     {
-        $user = Auth::user();
-
-        if ($ticket->user_id !== $user->id && !in_array($user->role, ['admin', 'staff'])) {
-            abort(403, 'غير مصرح لك بالرد على هذه التذكرة.');
-        }
+        abort_if((int)$ticket->user_id !== (int)Auth::id(), 403, 'غير مصرح.');
 
         $validated = $request->validate([
-            'message' => ['required', 'string', 'max:5000'],
-        ], [
-            'message.required' => 'لا يمكنك إرسال رد فارغ.',
+            'message'       => ['required', 'string', 'max:5000'],
+            'attachments'   => ['nullable', 'array', 'max:3'],
+            'attachments.*' => ['file', 'mimes:jpeg,png,jpg,pdf,webp', 'max:5120'],
         ]);
 
+        $attachmentPaths = [];
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $attachmentPaths[] = $file->store('ticket_attachments/' . $ticket->id, 'public');
+            }
+        }
+
         TicketMessage::create([
-            'ticket_id' => $ticket->id,
-            'user_id' => $user->id,
-            'message' => $validated['message'],
+            'ticket_id'        => $ticket->id,
+            'user_id'          => Auth::id(),
+            'message'          => strip_tags(trim($validated['message'])),
+            'attachments_json' => $attachmentPaths,
             'is_internal_note' => false,
         ]);
 
-        // Update ticket status
-        if ($user->role === 'client') {
-            $ticket->status = 'client_replied';
-        } else {
-            $ticket->status = 'staff_replied';
-        }
-        $ticket->save();
+        // Reopen ticket if closed or staff-replied
+        $ticket->update(['status' => 'client_replied']);
 
-        return back()->with('citadel_toast', [
-            'type' => 'success',
-            'message' => 'تم إرسال ردك بنجاح.'
-        ]);
+        SoulyNotificationService::sendToAdmins(
+            'ticket',
+            'رد جديد على تذكرة دعم 💬',
+            "رد جديد على التذكرة #{$ticket->ticket_number} من العميل " . Auth::user()->name,
+            route('admin.tickets.index'),
+            'chat-bubble-oval-left-ellipsis'
+        );
+
+        return back()->with('citadel_toast', 'تم إرسال ردك بنجاح.');
+    }
+
+    /**
+     * BrandERP licenses and power meter hub.
+     */
+    public function erpStore(): View
+    {
+        $user = Auth::user();
+        $orders = ErpOrder::where('user_id', $user->id)->with('items')->latest()->get();
+        return view('portal.erp-store', compact('user', 'orders'));
+    }
+
+    /**
+     * Hardware purchases, delivery tracking, and warranty hub.
+     */
+    public function hardware(): View
+    {
+        $user = Auth::user();
+        $orders = HardwareOrder::where('user_id', $user->id)->with('items')->latest()->get();
+        return view('portal.hardware', compact('user', 'orders'));
+    }
+
+    /**
+     * Redirect to dedicated ClientDeviceController.
+     */
+    public function devices(): RedirectResponse
+    {
+        return redirect()->action([ClientDeviceController::class, 'index']);
     }
 }

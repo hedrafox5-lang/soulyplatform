@@ -56,15 +56,22 @@ class FrontendUxAndAnimationPolishTest extends TestCase
     }
 
     /**
-     * 3. Test that desktop sidebar contains collapse controls and state management.
+     * 3. Test that desktop layout renders a clean sticky cyber-glass header without sidebar clutter.
      */
     public function test_desktop_layout_contains_collapsible_hud_dock(): void
     {
         $response = $this->get('/');
         $response->assertStatus(200);
 
-        $response->assertSee('$store.citadel.sidebarCollapsed', false);
-        $response->assertSee('$store.citadel.toggleSidebar()', false);
+        // Assert sidebar is eliminated
+        $response->assertDontSee('$store.citadel.sidebarCollapsed', false);
+        $response->assertDontSee('$store.citadel.toggleSidebar()', false);
+
+        // Assert clean sticky header & role-aware states
+        $response->assertSee('fixed top-0 inset-x-0 z-50', false);
+        $response->assertSee('backdrop-blur-xl', false);
+        $response->assertSee('الصفحة الرئيسية', false);
+        $response->assertSee('خدمات سولي', false);
     }
 
     /**
@@ -133,5 +140,76 @@ class FrontendUxAndAnimationPolishTest extends TestCase
 
         // Check official emblem artwork is embedded
         $response->assertSee('souly-emblem-retina.png', false);
+    }
+
+    /**
+     * 7. Test desktop sticky header and its 3 distinct states: Guest, Client, and Admin.
+     */
+    public function test_desktop_header_three_distinct_user_states_and_sticky_shell(): void
+    {
+        // 1. Guest State (State A)
+        $guestResponse = $this->get('/');
+        $guestResponse->assertStatus(200);
+        $guestResponse->assertSee('fixed top-0 inset-x-0 z-50', false);
+        $guestResponse->assertSee('backdrop-blur-xl bg-[#05050A]/85 border-b border-[#1C1F36]', false);
+        $guestResponse->assertSee('الصفحة الرئيسية', false);
+        $guestResponse->assertSee('خدمات سولي', false);
+        $guestResponse->assertSee('تحدث مع سولي AI', false);
+        $guestResponse->assertSee('تسجيل الدخول', false);
+        $guestResponse->assertSee('احجز الآن / استشارة', false);
+        $guestResponse->assertDontSee('المحفظة:', false);
+        $guestResponse->assertDontSee('إدارة المنصة ⚙️', false);
+
+        // 2. Client State (State B)
+        $client = User::where('role', 'client')->first();
+        $clientResponse = $this->actingAs($client)->get('/');
+        $clientResponse->assertStatus(200);
+        $clientResponse->assertSee('لوحة حسابي', false);
+        $clientResponse->assertSee('حجوزاتي', false);
+        $clientResponse->assertSee('الدعم الفني', false);
+        $clientResponse->assertSee('المحفظة:', false);
+        $clientResponse->assertSee('ج.م', false);
+        $clientResponse->assertSee('تسجيل الخروج', false);
+        $clientResponse->assertDontSee('إدارة المنصة ⚙️', false);
+
+        // 3. Admin State (State C)
+        $admin = User::where('role', 'admin')->first();
+        $adminResponse = $this->actingAs($admin)->get('/');
+        $adminResponse->assertStatus(200);
+        $adminResponse->assertSee('غرفة العمليات', false);
+        $adminResponse->assertSee('الحجوزات', false);
+        $adminResponse->assertSee('العملاء CRM', false);
+        $adminResponse->assertSee('المالية', false);
+        $adminResponse->assertSee('إدارة المنصة ⚙️', false);
+        $adminResponse->assertSee('إدارة الخدمات والباقات', false);
+        $adminResponse->assertSee('خزينة الردود', false);
+        $adminResponse->assertSee('إعدادات النظام', false);
+    }
+
+    /**
+     * 8. Test that Unified Button Design System and Top Cyber Loading Indicator are rendered properly.
+     */
+    public function test_unified_button_design_system_and_top_cyber_loading_indicator(): void
+    {
+        $response = $this->get('/');
+        $response->assertStatus(200);
+
+        // Check CSS Button classes in master stylesheet
+        $response->assertSee('.btn-souly-primary', false);
+        $response->assertSee('.btn-souly-glass', false);
+        $response->assertSee('.btn-souly-outline', false);
+        $response->assertSee('.btn-souly-compact', false);
+        $response->assertSee('soulyScannerPulse', false);
+
+        // Check button sizing metrics
+        $response->assertSee('min-width: 140px', false);
+        $response->assertSee('min-width: 100px !important', false);
+
+        // Check guest buttons use standard compact class
+        $response->assertSee('btn-souly-outline btn-souly-compact', false);
+        $response->assertSee('btn-souly-primary btn-souly-compact', false);
+
+        // Ensure no experimental border-image hacks exist in rendered output
+        $this->assertStringNotContainsString('border-image:', $response->getContent());
     }
 }

@@ -1,6 +1,6 @@
 @extends('admin.layout')
 
-@section('title', 'إدارة الخدمات والباقات والأيقونات CMS | سولي ديدجيتال سيتادل')
+@section('title', 'إدارة الخدمات والباقات والأيقونات CMS | سولي')
 @section('page-title', 'إدارة الخدمات والباقات CMS')
 
 @section('admin-content')
@@ -25,7 +25,7 @@
                 <span class="w-3 h-3 rounded-full bg-cyber-cyan animate-pulse"></span>
                 <span>كتالوج الخدمات والباقات والأيقونات التفاعلية (CMS)</span>
             </h2>
-            <p class="text-xs text-slate-400 font-readex">
+            <p class="text-xs text-slate-400 font-cairo">
                 تعديل الأسعار والخصومات، إضافة باقات جديدة، وإدارة مصفوفة الأيقونات التفاعلية للقطاعات الستة.
             </p>
         </div>
@@ -47,11 +47,11 @@
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <button type="button" @click="setupPackage(@json($srv))"
+                        <button type="button" @click="setupPackage({{ Js::from($srv) }})"
                                 class="px-3.5 py-1.5 rounded-xl bg-obsidian-surface hover:bg-slate-700 text-cyber-cyan border border-cyber-cyan/40 text-xs font-bold font-cairo transition-all">
                             + إضافة باقة جديدة
                         </button>
-                        <button type="button" @click="setupIcon(@json($srv))"
+                        <button type="button" @click="setupIcon({{ Js::from($srv) }})"
                                 class="px-3.5 py-1.5 rounded-xl bg-obsidian-surface hover:bg-slate-700 text-cyber-gold border border-cyber-gold/40 text-xs font-bold font-cairo transition-all">
                             + إضافة أيقونة
                         </button>
@@ -63,7 +63,7 @@
 
                 <!-- Packages List in Service -->
                 <div class="space-y-3">
-                    <h4 class="text-xs font-bold text-slate-400 font-readex">الباقات المسجلة ({{ $srv->packages->count() }}):</h4>
+                    <h4 class="text-xs font-bold text-slate-400 font-cairo">الباقات المسجلة ({{ $srv->packages->count() }}):</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         @foreach($srv->packages as $pkg)
                             <div class="p-4 rounded-2xl bg-obsidian-surface border border-obsidian-border space-y-3 flex flex-col justify-between">
@@ -75,8 +75,8 @@
                                     <div class="text-lg font-black font-mono text-white">
                                         {{ number_format($pkg->price, 2) }} <span class="text-[10px] text-slate-400 font-normal">EGP / {{ $pkg->unit_label }}</span>
                                     </div>
-                                    <div class="text-[11px] text-slate-400 font-readex">
-                                        الضمان: <strong class="text-cyber-gold font-mono">{{ $pkg->warranty_days }} يوم</strong>
+                                    <div class="text-[11px] text-slate-400 font-cairo">
+                                        الضمان: <strong class="text-cyber-gold font-mono">{{ $pkg->warranty_days }}</strong> <span class="font-cairo">يوم</span>
                                     </div>
                                 </div>
 
@@ -95,9 +95,9 @@
                 </div>
 
                 <!-- Icons Count Summary -->
-                <div class="flex items-center justify-between text-xs text-slate-400 font-readex pt-2 border-t border-obsidian-border/50">
+                <div class="flex items-center justify-between text-xs text-slate-400 font-cairo pt-2 border-t border-obsidian-border/50">
                     <div>
-                        إجمالي الأيقونات التفاعلية: <strong class="text-white font-mono">{{ $srv->icons->count() }} أيقونة</strong>
+                        إجمالي الأيقونات التفاعلية: <strong class="text-white font-mono">{{ $srv->icons->count() }}</strong> <span class="font-cairo">أيقونة</span>
                         (أنشطة: {{ $srv->icons->where('group_type', 'industry')->count() }} · مزايا: {{ $srv->icons->where('group_type', 'feature')->count() }})
                     </div>
                 </div>
@@ -120,22 +120,22 @@
                 @csrf
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 font-readex mb-1">اسم الباقة</label>
+                        <label class="block text-xs font-bold text-slate-300 font-cairo mb-1">اسم الباقة</label>
                         <input type="text" name="name" required placeholder="باقة الانطلاق" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-2 text-xs text-white font-cairo">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 font-readex mb-1">Slug</label>
+                        <label class="block text-xs font-bold text-slate-300 font-cairo mb-1">Slug</label>
                         <input type="text" name="slug" required placeholder="starter" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-2 text-xs text-white font-mono">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 font-readex mb-1">السعر (EGP)</label>
+                        <label class="block text-xs font-bold text-slate-300 font-cairo mb-1">السعر (EGP)</label>
                         <input type="number" step="0.01" name="price" required placeholder="850" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-2 text-xs text-white font-mono">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 font-readex mb-1">نظام المحاسبة</label>
+                        <label class="block text-xs font-bold text-slate-300 font-cairo mb-1">نظام المحاسبة</label>
                         <select name="billing_type" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-2 text-xs text-white font-cairo">
                             <option value="monthly">شهري (monthly)</option>
                             <option value="yearly">سنوي (yearly)</option>
@@ -147,21 +147,21 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 font-readex mb-1">تسمية الوحدة</label>
+                        <label class="block text-xs font-bold text-slate-300 font-cairo mb-1">تسمية الوحدة</label>
                         <input type="text" name="unit_label" placeholder="شهر / ساعة" value="شهر" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-2 text-xs text-white font-cairo">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 font-readex mb-1">أيام الضمان</label>
+                        <label class="block text-xs font-bold text-slate-300 font-cairo mb-1">أيام الضمان</label>
                         <input type="number" name="warranty_days" value="30" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-2 text-xs text-white font-mono">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 font-readex mb-1">المزايا (كل ميزة في سطر منفصل)</label>
-                    <textarea name="features" rows="4" placeholder="كاشير أوفلاين فائق السرعة&#10;إدارة المخزون&#10;ربط الفاتورة الإلكترونية" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl p-3 text-xs text-white font-readex"></textarea>
+                    <label class="block text-xs font-bold text-slate-300 font-cairo mb-1">المزايا (كل ميزة في سطر منفصل)</label>
+                    <textarea name="features" rows="4" placeholder="كاشير أوفلاين فائق السرعة&#10;إدارة المخزون&#10;ربط الفاتورة الإلكترونية" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl p-3 text-xs text-white font-cairo"></textarea>
                 </div>
 
-                <button type="submit" class="w-full py-3 rounded-xl bg-cyber-cyan text-obsidian-base font-extrabold text-xs font-cairo shadow-neon-cyan">
+                <button type="submit" class="btn-citadel-primary w-full py-3 text-xs">
                     إضافة الباقة فوراً
                 </button>
             </form>
@@ -182,35 +182,35 @@
                 @csrf
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 font-readex mb-1">نوع العنصر</label>
+                        <label class="block text-xs font-bold text-slate-300 font-cairo mb-1">نوع العنصر</label>
                         <select name="group_type" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-2 text-xs text-white font-cairo">
                             <option value="industry">نشاط / قطاع تجاري (industry)</option>
                             <option value="feature">ميزة تقنية (feature)</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 font-readex mb-1">العنوان</label>
+                        <label class="block text-xs font-bold text-slate-300 font-cairo mb-1">العنوان</label>
                         <input type="text" name="title" required placeholder="سوبر ماركت وهايبر" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-2 text-xs text-white font-cairo">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 font-readex mb-1">اسم الأيقونة أو SVG</label>
+                        <label class="block text-xs font-bold text-slate-300 font-cairo mb-1">اسم الأيقونة أو SVG</label>
                         <input type="text" name="icon_svg_or_name" required value="shopping-cart" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-2 text-xs text-white font-mono">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 font-readex mb-1">نص الشارة</label>
+                        <label class="block text-xs font-bold text-slate-300 font-cairo mb-1">نص الشارة</label>
                         <input type="text" name="badge_text" placeholder="حل متكامل" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-3 py-2 text-xs text-white font-cairo">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 font-readex mb-1">ملخص نافذة التفاصيل السريعة (0ms Popup)</label>
-                    <textarea name="popup_summary" rows="3" required placeholder="تخصيص كامل لنقاط البيع السريعة وربط الموازين الباركود..." class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl p-3 text-xs text-white font-readex"></textarea>
+                    <label class="block text-xs font-bold text-slate-300 font-cairo mb-1">ملخص نافذة التفاصيل السريعة (0ms Popup)</label>
+                    <textarea name="popup_summary" rows="3" required placeholder="تخصيص كامل لنقاط البيع السريعة وربط الموازين الباركود..." class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl p-3 text-xs text-white font-cairo"></textarea>
                 </div>
 
-                <button type="submit" class="w-full py-3 rounded-xl bg-cyber-gold text-obsidian-base font-extrabold text-xs font-cairo shadow-neon-gold">
+                <button type="submit" class="btn-citadel-gold w-full py-3 text-xs">
                     إضافة الأيقونة التفاعلية
                 </button>
             </form>

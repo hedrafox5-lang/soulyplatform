@@ -96,6 +96,9 @@ class Phase9LogoAndPwaTest extends TestCase
         $homeResponse->assertStatus(200);
         $homeResponse->assertSee('manifest.json', false);
         $homeResponse->assertSee('apple-touch-icon', false);
+        $homeResponse->assertSee('favicon.ico', false);
+        $this->assertFileExists(public_path('favicon.ico'));
+        $this->assertGreaterThan(1000, filesize(public_path('favicon.ico')));
         $homeResponse->assertSee('theme-color', false);
         $homeResponse->assertSee('#00F5D4', false);
         $homeResponse->assertSee('souly-hud-radar', false);

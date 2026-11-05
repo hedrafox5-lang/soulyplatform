@@ -4,50 +4,57 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Lead extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'name',
-        'phone',
-        'email',
-        'company_name',
-        'business_activity',
-        'interested_service_id',
-        'interested_package_id',
-        'source',
-        'status',
-        'assigned_to',
-        'ai_summary',
-        'notes',
+    protected $guarded = ['id'];
+
+    protected $casts = [
+        'metadata' => 'array',
+        'is_read'  => 'boolean',
     ];
 
-    public function interestedService(): BelongsTo
+    /**
+     * علاقة الخدمة المرتبطة بطلب العميل المحتمل
+     */
+    public function service()
     {
-        return $this->belongsTo(Service::class, 'interested_service_id');
+        if (class_exists(\App\Models\Service::class)) {
+            return $this->belongsTo(\App\Models\Service::class, 'service_id')->withDefault([
+                'title_ar' => 'خدمة عامة / استشارة تقنية',
+                'name'     => 'General Service',
+                'price'    => 0.00,
+            ]);
+        }
+
+        if (class_exists(\App\Models\CatalogItem::class)) {
+            return $this->belongsTo(\App\Models\CatalogItem::class, 'service_id')->withDefault([
+                'name_ar' => 'خدمة عامة / استشارة تقنية',
+                'name'    => 'General Service',
+                'price'   => 0.00,
+            ]);
+        }
+
+        return $this->belongsTo(\App\Models\Service::class, 'service_id')->withDefault();
     }
 
-    public function interestedPackage(): BelongsTo
+    /**
+     * علاقة المستخدم في حال تم تحويل العميل المحتمل إلى حساب عميل نشط
+     */
+    public function user()
     {
-        return $this->belongsTo(ServicePackage::class, 'interested_package_id');
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
-    public function assignedUser(): BelongsTo
+    public function activities()
     {
-        return $this->belongsTo(User::class, 'assigned_to');
+        return $this->hasMany(\App\Models\LeadActivity::class, 'lead_id');
     }
 
-    public function activities(): HasMany
+    public function conversations()
     {
-        return $this->hasMany(LeadActivity::class)->latest();
-    }
-
-    public function conversations(): HasMany
-    {
-        return $this->hasMany(AiConversation::class);
+        return $this->hasMany(\App\Models\AiConversation::class, 'lead_id');
     }
 }

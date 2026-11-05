@@ -1,0 +1,52 @@
+/* ==========================================================================
+   Souly Platform - Mobile Performance & Anti-Jitter Scroll Engine
+   Fixes: Infinite Scroll Loop, Bounce Jittering, and Carousel Y-Displacement
+   ========================================================================== */
+
+/* 1. قفل ارتداد واهتزاز الصفحة ومنع حلقة التمرير اللانهائي */
+html, body {
+    overflow-x: hidden !important;
+    overscroll-behavior-y: none !important;
+    scroll-behavior: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 2. تأمين حركة الكاروسيل الأفقي لمنع تحريك الصفحة رأسياً */
+.souly-carousel-track,
+[data-carousel-track],
+.mobile-carousel {
+    touch-action: pan-y pinch-zoom !important;
+    overflow-y: hidden !important;
+    overscroll-behavior-x: contain !important;
+}
+
+/* 3. إلغاء التأثيرات الثقيلة على كارت الشاشة في شاشات الموبايل واللمس */
+@media (max-width: 768px) {
+    /* إلغاء الـ Blur المستنزف للرام والمعالج */
+    .backdrop-blur-md,
+    .backdrop-blur-lg,
+    .backdrop-blur-sm,
+    .glass-obsidian {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background-color: rgba(10, 15, 29, 0.96) !important;
+    }
+
+    /* تسريع رندرة البطاقات والعناصر خارج الشاشة */
+    .service-card, 
+    .catalog-item, 
+    .hardware-card {
+        content-visibility: auto;
+        contain-intrinsic-size: 0 160px;
+        will-change: transform;
+    }
+
+    /* تخفيف الظلال النيونية المركبة لمنع هبوط الفريمات */
+    .shadow-2xl,
+    .shadow-cyan-500\/20,
+    .shadow-amber-500\/20,
+    .shadow-neon-cyan,
+    .shadow-neon-gold {
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+    }
+}

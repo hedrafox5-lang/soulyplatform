@@ -78,6 +78,14 @@ class User extends Authenticatable
         );
     }
 
+    /**
+     * Alias for walletOrCreate
+     */
+    public function getOrCreateWallet(): Wallet
+    {
+        return $this->walletOrCreate();
+    }
+
     public function walletTransactions(): HasMany
     {
         return $this->hasMany(WalletTransaction::class);
@@ -106,6 +114,16 @@ class User extends Authenticatable
     public function ticketMessages(): HasMany
     {
         return $this->hasMany(TicketMessage::class);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function unreadNotifications(): HasMany
+    {
+        return $this->hasMany(Notification::class)->where('is_read', false);
     }
 
     public function assignedLeads(): HasMany

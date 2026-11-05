@@ -1,6 +1,6 @@
 @extends('admin.layout')
 
-@section('title', 'ملف العميل: ' . $lead->name . ' | سولي ديدجيتال سيتادل CRM')
+@section('title', 'ملف العميل: ' . $lead->name . ' | سولي CRM')
 @section('page-title', 'ملف العميل Dossier: ' . $lead->name)
 
 @section('admin-content')
@@ -16,7 +16,7 @@
         </a>
 
         <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-400 font-readex">مصدر العميل:</span>
+            <span class="text-xs text-slate-400 font-cairo">مصدر العميل:</span>
             <span class="px-3 py-1 rounded-full text-xs font-mono font-bold uppercase bg-cyber-purple/20 text-purple-300 border border-cyber-purple/40">
                 {{ $lead->source }}
             </span>
@@ -32,18 +32,18 @@
             <!-- Summary Card -->
             <div class="p-6 rounded-3xl glass-obsidian border border-obsidian-border space-y-5">
                 <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyber-purple to-cyber-cyan p-[1.5px] shadow-neon-cyan shrink-0">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyber-purple to-cyber-cyan p-[1.5px] shrink-0">
                         <div class="w-full h-full bg-obsidian-surface rounded-2xl flex items-center justify-center font-bold text-white font-cairo">
                             {{ mb_substr($lead->name, 0, 2) }}
                         </div>
                     </div>
                     <div>
                         <h2 class="text-xl font-bold text-white font-cairo">{{ $lead->name }}</h2>
-                        <div class="text-xs text-slate-400 font-readex">{{ $lead->company_name ?? 'شركة تجارية / فرد' }}</div>
+                        <div class="text-xs text-slate-400 font-cairo">{{ $lead->company_name ?? 'شركة تجارية / فرد' }}</div>
                     </div>
                 </div>
 
-                <div class="space-y-2 pt-2 border-t border-obsidian-border/60 text-xs font-readex">
+                <div class="space-y-2 pt-2 border-t border-obsidian-border/60 text-xs font-cairo">
                     <div class="flex justify-between items-center py-1">
                         <span class="text-slate-400">رقم الهاتف / الواتساب:</span>
                         <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $lead->phone) }}" target="_blank" class="font-mono text-cyber-cyan font-bold hover:underline flex items-center gap-1">
@@ -69,8 +69,8 @@
                 </div>
 
                 @if($lead->ai_summary)
-                    <div class="p-3.5 rounded-2xl bg-cyber-cyan/10 border border-cyber-cyan/30 text-xs text-slate-300 font-readex space-y-1">
-                        <span class="text-cyber-cyan font-bold block text-[11px] font-mono">ملخص الذكاء الاصطناعي (AI Summary):</span>
+                    <div class="p-3.5 rounded-2xl bg-cyber-cyan/10 border border-cyber-cyan/30 text-xs text-slate-300 font-cairo space-y-1">
+                        <span class="text-cyber-cyan font-bold block text-[11px] font-cairo">ملخص الذكاء الاصطناعي (AI Summary):</span>
                         <p>{{ $lead->ai_summary }}</p>
                     </div>
                 @endif
@@ -84,7 +84,7 @@
                     @csrf
 
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-300 font-readex">المرحلة في المسار (Pipeline Stage)</label>
+                        <label class="block text-xs font-bold text-slate-300 font-cairo">المرحلة في المسار (Pipeline Stage)</label>
                         <select name="status" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-4 py-2.5 text-xs text-white font-cairo focus:outline-none focus:border-cyber-purple">
                             <option value="new" {{ $lead->status === 'new' ? 'selected' : '' }}>جديد (new)</option>
                             <option value="contacted" {{ $lead->status === 'contacted' ? 'selected' : '' }}>تم التواصل (contacted)</option>
@@ -96,7 +96,7 @@
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-300 font-readex">إسناد المتابعة إلى</label>
+                        <label class="block text-xs font-bold text-slate-300 font-cairo">إسناد المتابعة إلى</label>
                         <select name="assigned_to" class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-4 py-2.5 text-xs text-white font-cairo focus:outline-none focus:border-cyber-purple">
                             <option value="">-- بدون إسناد --</option>
                             @foreach($staffMembers as $staff)
@@ -108,7 +108,7 @@
                     </div>
 
                     <button type="submit" 
-                            class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyber-purple to-cyber-cyan text-obsidian-base font-extrabold text-xs font-cairo shadow-neon-purple hover:scale-[1.01] active:scale-95 transition-all">
+                            class="btn-citadel-primary w-full py-2.5 text-xs">
                         تحديث المسار والإسناد
                     </button>
                 </form>
@@ -159,11 +159,11 @@
                     </div>
 
                     <textarea name="description" rows="3" required placeholder="اكتب نتائج المكالمة، متطلبات العميل، أو موعد المتابعة القادم..."
-                              class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl p-3.5 text-xs text-white font-readex placeholder-slate-500 focus:outline-none focus:border-cyber-cyan"></textarea>
+                              class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl p-3.5 text-xs text-white font-cairo placeholder-slate-500 focus:outline-none focus:border-cyber-cyan"></textarea>
 
                     <div class="flex justify-end">
                         <button type="submit" 
-                                class="px-5 py-2.5 rounded-xl bg-cyber-cyan text-obsidian-base font-extrabold text-xs font-cairo shadow-neon-cyan hover:scale-105 active:scale-95 transition-all">
+                                class="btn-citadel-primary px-5 py-2.5 text-xs">
                             إضافة النشاط للسجل
                         </button>
                     </div>
@@ -174,7 +174,7 @@
             <div class="p-6 rounded-3xl glass-obsidian border border-obsidian-border space-y-5">
                 <h3 class="text-sm font-bold text-white font-cairo flex items-center justify-between">
                     <span>سجل التفاعلات الزمني (Activity Timeline)</span>
-                    <span class="text-xs font-mono text-slate-400">{{ $lead->activities->count() }} حدث موثق</span>
+                    <span class="text-xs font-cairo text-slate-400"><strong class="font-mono text-white">{{ $lead->activities->count() }}</strong> حدث موثق</span>
                 </h3>
 
                 @if($lead->activities->count() > 0)
@@ -206,7 +206,7 @@
                                         </span>
                                     </div>
 
-                                    <p class="text-xs text-slate-300 font-readex leading-relaxed whitespace-pre-line">
+                                    <p class="text-xs text-slate-300 font-cairo leading-relaxed whitespace-pre-line">
                                         {{ $act->description }}
                                     </p>
                                 </div>
@@ -214,7 +214,7 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="p-8 text-center text-xs text-slate-400 font-readex">
+                    <div class="p-8 text-center text-xs text-slate-400 font-cairo">
                         لا توجد أي تفاعلات مسجلة في هذا الملف بعد.
                     </div>
                 @endif

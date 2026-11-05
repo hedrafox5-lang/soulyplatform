@@ -1,9 +1,9 @@
 /**
- * Souly Digital Citadel - 25-Second Cinematic Story Loader with Native Cyber Synthesizer
+ * Souly Digital Citadel - 11-Second Executive Story Loader with Native Cyber Synthesizer
  * Features:
- * - 5 Educational Chapters (5s each, 25s total)
+ * - 4 Executive Chapters (11s total fast-paced showcase)
  * - Native Web Audio API Ambient Cyber Synthesizer (Zero MP3 Dependencies)
- * - IndexedDB 12-Hour Persistence (via SoulyDB)
+ * - First-Visit Persistence + Watchdog Scroll Unlock Guarantee
  * - Interactive Skip & Replay Controls
  */
 (function (global) {
@@ -28,7 +28,7 @@
                 }
             }
             if (this.ctx && this.ctx.state === 'suspended') {
-                this.ctx.resume();
+                this.ctx.resume().catch(() => {});
             }
         }
 
@@ -39,28 +39,24 @@
             try {
                 const now = this.ctx.currentTime;
 
-                // Master Gain
                 this.masterGain = this.ctx.createGain();
                 this.masterGain.gain.setValueAtTime(0.0001, now);
                 this.masterGain.connect(this.ctx.destination);
 
-                // Lowpass Biquad Filter for Deep Sci-Fi Atmosphere
                 this.filter = this.ctx.createBiquadFilter();
                 this.filter.type = 'lowpass';
                 this.filter.frequency.setValueAtTime(450, now);
                 this.filter.Q.setValueAtTime(4, now);
                 this.filter.connect(this.masterGain);
 
-                // LFO for bioluminescent breathing filter sweep
                 this.lfo = this.ctx.createOscillator();
                 const lfoGain = this.ctx.createGain();
-                this.lfo.frequency.setValueAtTime(0.2, now); // Slow 5-second breath
+                this.lfo.frequency.setValueAtTime(0.2, now);
                 lfoGain.gain.setValueAtTime(250, now);
                 this.lfo.connect(lfoGain);
                 lfoGain.connect(this.filter.frequency);
                 this.lfo.start();
 
-                // Layer 1: Sub Bass Drone (A1 - 55Hz)
                 const osc1 = this.ctx.createOscillator();
                 const gain1 = this.ctx.createGain();
                 osc1.type = 'sawtooth';
@@ -71,7 +67,6 @@
                 osc1.start();
                 this.oscillators.push(osc1);
 
-                // Layer 2: Harmonic Cyber Fifth (E2 - 82.4Hz)
                 const osc2 = this.ctx.createOscillator();
                 const gain2 = this.ctx.createGain();
                 osc2.type = 'sine';
@@ -82,7 +77,6 @@
                 osc2.start();
                 this.oscillators.push(osc2);
 
-                // Layer 3: High Bioluminescent Shimmer (A4 - 440Hz with detune)
                 const osc3 = this.ctx.createOscillator();
                 const gain3 = this.ctx.createGain();
                 osc3.type = 'triangle';
@@ -97,7 +91,7 @@
                 this.isPlaying = true;
 
                 if (!this.isMuted) {
-                    this.masterGain.gain.linearRampToValueAtTime(0.18, now + 1.5);
+                    this.masterGain.gain.linearRampToValueAtTime(0.18, now + 1.2);
                 }
             } catch (err) {
                 console.warn('[SoulyAudio] Web Audio API init prevented:', err);
@@ -137,9 +131,9 @@
             this.isMuted = !this.isMuted;
             const now = this.ctx.currentTime;
             if (this.isMuted) {
-                this.masterGain.gain.linearRampToValueAtTime(0.0001, now + 0.5);
+                this.masterGain.gain.linearRampToValueAtTime(0.0001, now + 0.4);
             } else {
-                this.masterGain.gain.linearRampToValueAtTime(0.18, now + 0.8);
+                this.masterGain.gain.linearRampToValueAtTime(0.18, now + 0.6);
             }
             return !this.isMuted;
         }
@@ -149,7 +143,7 @@
             try {
                 const now = this.ctx.currentTime;
                 if (this.masterGain) {
-                    this.masterGain.gain.linearRampToValueAtTime(0.0001, now + 0.8);
+                    this.masterGain.gain.linearRampToValueAtTime(0.0001, now + 0.5);
                 }
                 setTimeout(() => {
                     this.oscillators.forEach(o => {
@@ -160,7 +154,7 @@
                         try { this.lfo.stop(); this.lfo.disconnect(); } catch (e) {}
                     }
                     this.isPlaying = false;
-                }, 850);
+                }, 550);
             } catch (e) {}
         }
     }
@@ -168,103 +162,104 @@
     class SoulyCinematicLoaderManager {
         constructor() {
             this.audio = new SoulyCyberAudioEngine();
-            this.duration = 25000; // 25 seconds
+            this.duration = 11000; // 11 seconds Executive Cyber Showcase
             this.chapters = [
                 {
                     id: 1,
-                    range: [0, 20],
-                    badge: 'قلعة سولي الرقمية · CITADEL CORE',
-                    title: 'مرحباً بك في قلعة سولي الرقمية',
-                    subtitle: 'حيث ينتهي المستحيل وتبدأ السيادة التكنولوجية المتكاملة لأعمالك',
-                    tag: 'السيادة والريادة',
-                    color: '#00F5D4',
-                    icon: 'shield'
+                    range: [0, 25],
+                    badge: 'القلعة الرقمية الأولى · SOULY CITADEL',
+                    title: 'سولي.. القلعة الرقمية الأولى لإدارة وتشغيل الأعمال بالذكاء الاصطناعي في مصر',
+                    subtitle: 'منظومة سيادية متكاملة تجمع بين أقوى برمجيات الأعمال وكوادر الذكاء الاصطناعي الفائقة والتدريع السيبراني المتقدم',
+                    metric: 'جاهزية 100% · سيادة رقمية · معايير عالمية',
+                    color: '#00F5D4'
                 },
                 {
                     id: 2,
-                    range: [20, 40],
-                    badge: 'الأتمتة والذكاء السيادي · ERP & AI AGENTS',
-                    title: 'نظام BrandERP السحابي وموظفو الذكاء الاصطناعي',
-                    subtitle: 'إدارة متكاملة ومؤتمتة للمخزون، الفواتير، وكوادر AI تعمل 24/7 لخدمة ومبيعات عملائك',
-                    tag: 'أتمتة فائقة السرعة',
-                    color: '#7B2CBF',
-                    icon: 'cpu'
+                    range: [25, 50],
+                    badge: 'الأنظمة السحابية والمحلية · BRAND-ERP',
+                    title: 'نظام BrandERP الثوري: ابدأ بنظامك الأساسي بـ 2,000 ج.م فقط',
+                    subtitle: 'وشكّل منظومتك من بين +300 ميزة ذكية حتى باقات المؤسسات الكاملة',
+                    metric: 'نواة 2,000 EGP · 12 موديول · +300 ميزة دقيقة',
+                    color: '#00F5D4'
                 },
                 {
                     id: 3,
-                    range: [40, 60],
-                    badge: 'التدريع والجاهزية · CYBERSECURITY & HARDWARE',
-                    title: 'تدريع سيبراني بتشفير عسكري 256-bit',
-                    subtitle: 'حصانة سيبرانية ضد الهاكرز والفدية، وصيانة هندسية عاجلة لأجهزتك وسيرفراتك في مقرك',
-                    tag: 'أمان غير قابل للاختراق',
-                    color: '#FFB800',
-                    icon: 'lock'
+                    range: [50, 75],
+                    badge: 'الكوادر الرقمية والتدريع الهندسي · AI & CYBER',
+                    title: 'موظفو ذكاء اصطناعي يعملون 24/7 بدون أخطاء',
+                    subtitle: 'أمن سيبراني وحماية عائلية ومؤسسية.. وصيانة هندسية بمعايير عالمية',
+                    metric: 'رد في 1.8 ثانية · تشفير 256-bit · صيانة بمقرك',
+                    color: '#9D4EDD'
                 },
                 {
                     id: 4,
-                    range: [60, 80],
-                    badge: 'الاستشارات والأكاديمية · ADVISORY & ACADEMY',
-                    title: 'استشارات بيزنس استراتيجية وأكاديمية احترافية',
-                    subtitle: 'قيادة التحول الرقمي لمشروعك، وكورسات تطبيق عملي في هندسة الـ AI والهاكينج الأخلاقي',
-                    tag: 'بناء المستقبل الرقمي',
-                    color: '#00F5D4',
-                    icon: 'academic'
-                },
-                {
-                    id: 5,
-                    range: [80, 100],
-                    badge: 'لماذا سولي؟ · THE CITADEL GUARANTEE',
-                    title: 'ضمان هندسي حقيقي، سرية مطلقة، ومحفظة ذكية',
-                    subtitle: 'محفظتك الرقمية تتيح حجز وإدارة جميع خدمات المنصة بضغطة زر مع دعم تنفيذي فوري',
-                    tag: 'جاهزون للانطلاق',
-                    color: '#10B981',
-                    icon: 'wallet'
+                    range: [75, 100],
+                    badge: 'انطلاق المنظومة · SYSTEM ACTIVATION',
+                    title: 'مرحباً بك في المستقبل.. كل شيء تحت سيطرتك بضغطة زر',
+                    subtitle: 'محفظتك الرقمية ولوحة تحكمك جاهزتان فوراً لإطلاق خدماتك وحجز أنظمتك السيادية',
+                    metric: '0ms استجابة فورية · تحكم مركزي كامل',
+                    color: '#10B981'
                 }
             ];
 
             this.currentChapter = 0;
-            this.timer = null;
+            this.watchdogTimer = null;
             this.startTime = null;
             this.isSkipped = false;
             this.dom = {};
-            this.TTL_HOURS = 12;
         }
 
         async shouldShowLoader() {
-            // Check if explicitly forced via query param
             const params = new URLSearchParams(window.location.search);
             if (params.get('intro') === '1' || params.get('loader') === '1') {
                 return true;
             }
 
-            // Check IndexedDB / LocalStorage persistence via SoulyDB
+            try {
+                if (localStorage.getItem('souly_story_seen')) {
+                    return false;
+                }
+            } catch (e) {}
+
+            const path = window.location.pathname;
+            if (path !== '/' && path !== '') {
+                try { localStorage.setItem('souly_story_seen', 'true'); } catch (e) {}
+                return false;
+            }
+
             try {
                 if (window.SoulyDB) {
                     const record = await window.SoulyDB.get('souly_loader_watched');
                     if (record && record.timestamp) {
-                        const ageMs = Date.now() - record.timestamp;
-                        const maxAgeMs = this.TTL_HOURS * 60 * 60 * 1000;
-                        if (ageMs < maxAgeMs) {
-                            return false;
-                        }
+                        try { localStorage.setItem('souly_story_seen', 'true'); } catch (e) {}
+                        return false;
                     }
                 }
-            } catch (e) {
-                console.warn('[SoulyLoader] Persistence read error:', e);
-            }
+            } catch (e) {}
+
             return true;
         }
 
         async recordWatched() {
             try {
+                localStorage.setItem('souly_story_seen', 'true');
                 if (window.SoulyDB) {
                     await window.SoulyDB.set('souly_loader_watched', {
                         timestamp: Date.now(),
-                        version: '1.0'
+                        version: '2.5'
                     });
                 }
-            } catch (e) {
-                console.warn('[SoulyLoader] Persistence write error:', e);
+            } catch (e) {}
+        }
+
+        hideAndUnlock() {
+            document.documentElement.classList.add('souly-loader-hidden');
+            if (this.dom.wrapper) {
+                this.dom.wrapper.style.display = 'none';
+            }
+            document.body.classList.remove('overflow-hidden');
+            if (window.SoulyUI && typeof window.SoulyUI.forceUnlockScroll === 'function') {
+                window.SoulyUI.forceUnlockScroll();
             }
         }
 
@@ -274,10 +269,12 @@
 
             const shouldShow = await this.shouldShowLoader();
             if (!shouldShow) {
-                this.dom.wrapper.style.display = 'none';
-                document.body.classList.remove('overflow-hidden');
+                this.hideAndUnlock();
                 return;
             }
+
+            document.documentElement.classList.remove('souly-loader-hidden');
+            this.dom.wrapper.style.display = 'flex';
 
             this.dom.progressBar = document.getElementById('loader-progress-bar');
             this.dom.percentText = document.getElementById('loader-percent-text');
@@ -285,6 +282,7 @@
             this.dom.badge = document.getElementById('loader-chapter-badge');
             this.dom.title = document.getElementById('loader-chapter-title');
             this.dom.subtitle = document.getElementById('loader-chapter-subtitle');
+            this.dom.metric = document.getElementById('loader-chapter-metric');
             this.dom.indicators = document.querySelectorAll('.loader-chapter-pill');
             this.dom.soundBtn = document.getElementById('loader-sound-toggle');
             this.dom.skipBtn = document.getElementById('loader-skip-btn');
@@ -297,18 +295,21 @@
 
         bindEvents() {
             if (this.dom.skipBtn) {
-                this.dom.skipBtn.addEventListener('click', () => this.skip());
+                this.dom.skipBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.skip();
+                });
             }
 
             if (this.dom.soundBtn) {
-                this.dom.soundBtn.addEventListener('click', () => {
+                this.dom.soundBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
                     const active = this.audio.toggleMute();
                     this.updateSoundBtn(active);
                 });
             }
 
-            // Start sound on first user touch / click anywhere inside loader if browser blocked autoplay
-            this.dom.wrapper.addEventListener('click', (e) => {
+            this.dom.wrapper.addEventListener('click', () => {
                 if (!this.audio.isPlaying && !this.audio.isMuted) {
                     this.audio.startSynthesizer();
                 }
@@ -318,7 +319,6 @@
         updateSoundBtn(isActive) {
             if (!this.dom.soundBtn) return;
             const textEl = this.dom.soundBtn.querySelector('.sound-btn-text');
-            const iconEl = this.dom.soundBtn.querySelector('.sound-btn-icon');
             if (isActive) {
                 if (textEl) textEl.textContent = 'كتم الموسيقى التكنولوجية 🔇';
                 this.dom.soundBtn.classList.add('neon-border-cyan', 'text-cyber-cyan');
@@ -334,7 +334,12 @@
             this.startTime = performance.now();
             this.setChapter(0);
 
-            // Tick loop for 60fps smooth progress
+            // Watchdog timer ensures loader always closes even if tab is backgrounded
+            if (this.watchdogTimer) clearTimeout(this.watchdogTimer);
+            this.watchdogTimer = setTimeout(() => {
+                if (!this.isSkipped) this.complete();
+            }, this.duration + 1200);
+
             const tick = (now) => {
                 if (this.isSkipped) return;
 
@@ -352,8 +357,7 @@
                     this.dom.secondsText.textContent = `${remainingSec}s`;
                 }
 
-                // Chapter evaluation (every 20%)
-                const chapterIdx = Math.min(4, Math.floor(progress / 20));
+                const chapterIdx = Math.min(3, Math.floor(progress / 25));
                 if (chapterIdx !== this.currentChapter) {
                     this.setChapter(chapterIdx);
                 }
@@ -375,7 +379,6 @@
 
             this.audio.playChime(660 + idx * 80);
 
-            // Update Chapter Navigation Pills
             if (this.dom.indicators) {
                 this.dom.indicators.forEach((pill, i) => {
                     if (i === idx) {
@@ -388,68 +391,77 @@
                 });
             }
 
-            // Animate Text Transitions via GSAP if available
+            const animEls = [this.dom.badge, this.dom.title, this.dom.subtitle, this.dom.metric].filter(Boolean);
             if (typeof gsap !== 'undefined') {
                 gsap.timeline()
-                    .to([this.dom.badge, this.dom.title, this.dom.subtitle], {
+                    .to(animEls, {
                         opacity: 0,
                         y: -8,
-                        duration: 0.25,
+                        duration: 0.18,
                         onComplete: () => {
-                            if (this.dom.badge) this.dom.badge.textContent = chap.badge;
+                            if (this.dom.badge) {
+                                this.dom.badge.textContent = chap.badge;
+                                this.dom.badge.style.color = chap.color;
+                                this.dom.badge.style.borderColor = `${chap.color}50`;
+                            }
                             if (this.dom.title) this.dom.title.textContent = chap.title;
                             if (this.dom.subtitle) this.dom.subtitle.textContent = chap.subtitle;
+                            if (this.dom.metric) {
+                                this.dom.metric.textContent = chap.metric;
+                                this.dom.metric.style.color = chap.color;
+                                this.dom.metric.style.borderColor = `${chap.color}40`;
+                            }
                         }
                     })
-                    .to([this.dom.badge, this.dom.title, this.dom.subtitle], {
+                    .to(animEls, {
                         opacity: 1,
                         y: 0,
-                        duration: 0.45,
-                        stagger: 0.08,
+                        duration: 0.32,
+                        stagger: 0.05,
                         ease: 'power2.out'
                     });
             } else {
                 if (this.dom.badge) this.dom.badge.textContent = chap.badge;
                 if (this.dom.title) this.dom.title.textContent = chap.title;
                 if (this.dom.subtitle) this.dom.subtitle.textContent = chap.subtitle;
+                if (this.dom.metric) this.dom.metric.textContent = chap.metric;
             }
         }
 
         skip() {
             if (this.isSkipped) return;
-            this.isSkipped = true;
             this.complete();
         }
 
         complete() {
+            if (this.isSkipped) return;
             this.isSkipped = true;
+            if (this.watchdogTimer) clearTimeout(this.watchdogTimer);
+
             this.audio.stop();
             this.recordWatched();
 
             if (typeof gsap !== 'undefined' && this.dom.wrapper) {
                 gsap.to(this.dom.wrapper, {
                     opacity: 0,
-                    scale: 1.04,
-                    filter: 'blur(10px)',
-                    duration: 0.75,
+                    scale: 1.03,
+                    duration: 0.45,
                     ease: 'power3.inOut',
                     onComplete: () => {
-                        this.dom.wrapper.style.display = 'none';
-                        document.body.classList.remove('overflow-hidden');
-                        // Trigger entry animations for main page content
+                        this.hideAndUnlock();
                         if (window.SoulyUI && typeof window.SoulyUI.triggerPageEntry === 'function') {
                             window.SoulyUI.triggerPageEntry();
                         }
                     }
                 });
-            } else if (this.dom.wrapper) {
-                this.dom.wrapper.style.display = 'none';
-                document.body.classList.remove('overflow-hidden');
+            } else {
+                this.hideAndUnlock();
             }
         }
 
         async replay() {
             try {
+                localStorage.removeItem('souly_story_seen');
                 if (window.SoulyDB) {
                     await window.SoulyDB.delete('souly_loader_watched');
                 }

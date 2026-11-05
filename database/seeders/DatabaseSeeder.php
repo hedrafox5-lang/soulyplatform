@@ -75,7 +75,7 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('Password123!'),
                 'role' => 'staff',
                 'phone' => '+201000000002',
-                'company_name' => 'فريق عمليات سولي سيتادل',
+                'company_name' => 'فريق عمليات سولي',
                 'avatar' => null,
                 'is_active' => true,
                 'email_verified_at' => now(),
@@ -130,9 +130,15 @@ class DatabaseSeeder extends Seeder
         );
 
         // ---------------------------------------------------------------------
-        // 2. THE 6 CORE SERVICES CATALOG (Comprehensive Seeding)
+        // 2. THE 6 CORE SERVICES CATALOG & CANNED RESPONSES VAULT
         // ---------------------------------------------------------------------
-        $this->call(ServiceCatalogSeeder::class);
+        $this->call([
+            ServiceCatalogSeeder::class,
+            CannedResponsesVaultSeeder::class,
+            ErpStoreCatalogSeeder::class,
+            HardwareProductSeeder::class,
+            AiApiKeysSeeder::class,
+        ]);
 
         $erp = Service::where('slug', 'brand-erp')->first();
         $erpStarterPackage = ServicePackage::where('service_id', $erp->id)->where('slug', 'starter')->first();
@@ -151,42 +157,32 @@ class DatabaseSeeder extends Seeder
         );
 
         $catErp = CannedResponseCategory::firstOrCreate(
-            ['slug' => 'brand-erp-responses'],
+            ['slug' => 'erp'],
             [
-                'name' => 'نظام BrandERP',
-                'icon' => 'building-office-2',
+                'name' => 'ردود نظام BrandERP السحابي',
+                'icon' => 'cube',
                 'accent_color' => '#00F5D4',
                 'display_order' => 2,
             ]
         );
 
         $catAi = CannedResponseCategory::firstOrCreate(
-            ['slug' => 'ai-agents-responses'],
+            ['slug' => 'ai-agents'],
             [
-                'name' => 'موظفو الذكاء الاصطناعي AI Agents',
+                'name' => 'ردود موظفي الذكاء الاصطناعي AI Agents',
                 'icon' => 'cpu-chip',
                 'accent_color' => '#7B2CBF',
                 'display_order' => 3,
             ]
         );
 
-        $catCyber = CannedResponseCategory::firstOrCreate(
-            ['slug' => 'cybersecurity-responses'],
-            [
-                'name' => 'الأمن السيبراني والتدريع',
-                'icon' => 'shield-check',
-                'accent_color' => '#FFB800',
-                'display_order' => 4,
-            ]
-        );
-
         $catWallet = CannedResponseCategory::firstOrCreate(
-            ['slug' => 'wallet-billing-responses'],
+            ['slug' => 'pricing-objections'],
             [
-                'name' => 'المحفظة والمدفوعات الإلكترونية',
+                'name' => 'ردود الأسعار والاعتراضات وشحن المحفظة',
                 'icon' => 'wallet',
                 'accent_color' => '#10B981',
-                'display_order' => 5,
+                'display_order' => 7,
             ]
         );
 
@@ -195,7 +191,7 @@ class DatabaseSeeder extends Seeder
             [
                 'category_id' => $catGeneral->id,
                 'title' => 'ترحيب رسمي وتعريف بمنظومة سولي',
-                'content' => "أهلاً بك في سولي ديدجيتال سيتادل (soulyeg.online) 🛡️\nيسعدنا مساعدتك في تسريع نمو وتدريع أعمالك رقمياً. كيف يمكن لفريقنا ووكلاؤنا الأذكياء خدمتك اليوم؟",
+                'content' => "أهلاً بك في سولي 🛡️\nيسعدنا مساعدتك في تسريع نمو وتدريع أعمالك رقمياً. كيف يمكن لفريقنا ووكلاؤنا الأذكياء خدمتك اليوم؟",
                 'tags_json' => ['ترحيب', 'بداية', 'خدمة_عملاء'],
                 'usage_count' => 142,
                 'created_by' => $admin->id,

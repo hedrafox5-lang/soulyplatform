@@ -1,12 +1,12 @@
 @extends('admin.layout')
 
-@section('title', 'خزينة الردود الذكية للمبيعات والدعم الفني | سولي ديدجيتال سيتادل')
+@section('title', 'خزينة الردود الذكية للمبيعات والدعم الفني | سولي')
 @section('page-title', 'خزينة الردود الذكية السريعة ⚡')
 
 @section('admin-content')
 <div class="space-y-8" x-data="cannedVaultController({
-    categories: @json($categories),
-    responses: @json($allResponses)
+    categories: {{ Js::from($categories) }},
+    responses: {{ Js::from($allResponses) }}
 })">
 
     <!-- ===================================================================== -->
@@ -22,7 +22,7 @@
                 <h2 class="text-xl sm:text-2xl font-black text-white font-cairo">
                     خزينة الردود الذكية المعتمدة للمبيعات والدعم الفني
                 </h2>
-                <p class="text-xs text-slate-400 font-readex">
+                <p class="text-xs text-slate-400 font-cairo">
                     انسخ أقوى الردود البيعية والهندسية بنقرة زر واحدة للصقها فوراً في واتساب أو تذاكر الدعم مع عداد آلي لمعدل الاستخدام.
                 </p>
             </div>
@@ -50,19 +50,19 @@
                 </svg>
             </div>
             <div class="absolute inset-y-0 left-4 flex items-center">
-                <span class="text-[11px] font-mono text-slate-400" x-text="`${filteredResponses.length} رد مطابق`"></span>
+                <span class="text-[11px] font-cairo text-slate-400" x-text="`${filteredResponses.length} رد مطابق`"></span>
             </div>
         </div>
 
         <!-- Quick Shortcut Filters (Chips) -->
         <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-            <span class="text-[11px] text-slate-500 font-mono shrink-0">أكواد سريعة:</span>
+            <span class="text-[11px] text-slate-500 font-cairo shrink-0">أكواد سريعة:</span>
             <button type="button" @click="searchQuery = '/erp'" class="px-2.5 py-1 rounded-lg bg-obsidian-surface hover:bg-slate-700 text-cyber-cyan border border-obsidian-border font-mono text-[11px] transition-colors">/erp</button>
             <button type="button" @click="searchQuery = '/ai'" class="px-2.5 py-1 rounded-lg bg-obsidian-surface hover:bg-slate-700 text-cyber-cyan border border-obsidian-border font-mono text-[11px] transition-colors">/ai</button>
             <button type="button" @click="searchQuery = '/cyber'" class="px-2.5 py-1 rounded-lg bg-obsidian-surface hover:bg-slate-700 text-cyber-gold border border-obsidian-border font-mono text-[11px] transition-colors">/cyber</button>
             <button type="button" @click="searchQuery = '/maint'" class="px-2.5 py-1 rounded-lg bg-obsidian-surface hover:bg-slate-700 text-cyber-gold border border-obsidian-border font-mono text-[11px] transition-colors">/maint</button>
             <button type="button" @click="searchQuery = '/wallet'" class="px-2.5 py-1 rounded-lg bg-obsidian-surface hover:bg-slate-700 text-emerald-400 border border-obsidian-border font-mono text-[11px] transition-colors">/wallet</button>
-            <button type="button" @click="searchQuery = '/obj'" class="px-2.5 py-1 rounded-lg bg-obsidian-surface hover:bg-slate-700 text-purple-300 border border-obsidian-border font-mono text-[11px] transition-colors">/obj (الاعتراضات)</button>
+            <button type="button" @click="searchQuery = '/obj'" class="px-2.5 py-1 rounded-lg bg-obsidian-surface hover:bg-slate-700 text-purple-300 border border-obsidian-border text-[11px] transition-colors"><span class="font-mono">/obj</span> <span class="font-cairo">(الاعتراضات)</span></button>
         </div>
     </div>
 
@@ -72,14 +72,14 @@
     <div class="flex items-center gap-2 overflow-x-auto pb-2 text-xs font-cairo font-bold">
         <button type="button" @click="activeCategorySlug = 'all'" 
                 class="px-4 py-2 rounded-xl transition-all shrink-0"
-                :class="activeCategorySlug === 'all' ? 'bg-cyber-gold text-obsidian-base shadow-neon-gold' : 'bg-obsidian-surface text-slate-300 hover:text-white border border-obsidian-border'">
+                :class="activeCategorySlug === 'all' ? 'bg-cyber-gold text-obsidian-base font-black shadow-sm' : 'bg-obsidian-surface text-slate-300 hover:text-white border border-obsidian-border'">
             كافة الردود ({{ $allResponses->count() }})
         </button>
 
         @foreach($categories as $cat)
             <button type="button" @click="activeCategorySlug = '{{ $cat->slug }}'" 
                     class="px-4 py-2 rounded-xl transition-all shrink-0 flex items-center gap-1.5"
-                    :class="activeCategorySlug === '{{ $cat->slug }}' ? 'bg-cyber-gold text-obsidian-base shadow-neon-gold' : 'bg-obsidian-surface text-slate-300 hover:text-white border border-obsidian-border'">
+                    :class="activeCategorySlug === '{{ $cat->slug }}' ? 'bg-cyber-gold text-obsidian-base font-black shadow-sm' : 'bg-obsidian-surface text-slate-300 hover:text-white border border-obsidian-border'">
                 <span>{{ $cat->name }}</span>
                 <span class="text-[10px] font-mono opacity-80">({{ $cat->responses->count() }})</span>
             </button>
@@ -126,7 +126,7 @@
                     </h3>
 
                     <!-- Message Body Preview Box -->
-                    <div class="p-4 rounded-2xl bg-obsidian-surface border border-obsidian-border/80 text-xs text-slate-300 font-readex leading-relaxed whitespace-pre-line max-h-48 overflow-y-auto select-all"
+                    <div class="p-4 rounded-2xl bg-obsidian-surface border border-obsidian-border/80 text-xs text-slate-300 font-cairo leading-relaxed whitespace-pre-line max-h-48 overflow-y-auto select-all"
                          x-text="item.content">
                     </div>
                 </div>
@@ -162,7 +162,7 @@
     <template x-if="filteredResponses.length === 0">
         <div class="p-12 text-center rounded-3xl glass-obsidian border border-obsidian-border space-y-3">
             <div class="text-sm font-bold text-white font-cairo">لا توجد ردود مطابقة للبحث</div>
-            <p class="text-xs text-slate-400 font-readex">
+            <p class="text-xs text-slate-400 font-cairo">
                 جرب البحث بكلمة أخرى أو تصفح الأقسام الكاملة.
             </p>
         </div>
@@ -198,7 +198,7 @@
                 <!-- Category & Shortcut -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-300 font-readex">القسم التصنيفي</label>
+                        <label class="block text-xs font-bold text-slate-300 font-cairo">القسم التصنيفي</label>
                         <select name="category_id" required
                                 class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-4 py-2.5 text-xs text-white font-cairo focus:outline-none focus:border-cyber-gold">
                             @foreach($categories as $cat)
@@ -208,7 +208,7 @@
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-300 font-readex">الكود المختصر (Shortcut)</label>
+                        <label class="block text-xs font-bold text-slate-300 font-cairo">الكود المختصر (Shortcut)</label>
                         <input type="text" name="shortcut_code" required placeholder="/erp-discount"
                                class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-cyber-gold">
                     </div>
@@ -216,28 +216,28 @@
 
                 <!-- Title -->
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold text-slate-300 font-readex">عنوان الرد (للبحث الداخلي السريع)</label>
+                    <label class="block text-xs font-bold text-slate-300 font-cairo">عنوان الرد (للبحث الداخلي السريع)</label>
                     <input type="text" name="title" required placeholder="مثال: خصم خاص لعملاء الفروع المتعددة"
                            class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-4 py-2.5 text-xs text-white font-cairo focus:outline-none focus:border-cyber-gold">
                 </div>
 
                 <!-- Content -->
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold text-slate-300 font-readex">نص الرسالة الكامل (جاهز للنسخ والإرسال)</label>
+                    <label class="block text-xs font-bold text-slate-300 font-cairo">نص الرسالة الكامل (جاهز للنسخ والإرسال)</label>
                     <textarea name="content" rows="6" required placeholder="أهلاً بك يا فندم! يسعدنا تقديم عرض خاص..."
-                              class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl p-3.5 text-xs text-white font-readex placeholder-slate-500 focus:outline-none focus:border-cyber-gold leading-relaxed"></textarea>
+                              class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl p-3.5 text-xs text-white font-cairo placeholder-slate-500 focus:outline-none focus:border-cyber-gold leading-relaxed"></textarea>
                 </div>
 
                 <!-- Tags -->
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold text-slate-300 font-readex">الوسوم والكلمات المفتاحية (مفصولة بفاصلة)</label>
+                    <label class="block text-xs font-bold text-slate-300 font-cairo">الوسوم والكلمات المفتاحية (مفصولة بفاصلة)</label>
                     <input type="text" name="tags" placeholder="erp, خصم, فروع, اسعار"
                            class="w-full bg-obsidian-surface border border-obsidian-border rounded-xl px-4 py-2.5 text-xs text-white font-cairo focus:outline-none focus:border-cyber-gold">
                 </div>
 
                 <!-- Submit Button -->
                 <button type="submit"
-                        class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyber-gold to-cyber-cyan text-obsidian-base font-extrabold text-xs sm:text-sm font-cairo shadow-neon-gold hover:scale-[1.01] active:scale-95 transition-all">
+                        class="btn-citadel-gold w-full py-3.5 text-xs sm:text-sm">
                     حفظ الرد في الخزينة
                 </button>
             </form>
