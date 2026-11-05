@@ -208,7 +208,7 @@ Route::get('/api/catalog/icons', function () {
 Route::post('/express-book', [ExpressBookingController::class, 'store'])->name('express-book.store');
 
 // Protected Quick Login for Local Development Only (Zero Production Exposure)
-Route::post('/login/demo/{role}', function ($role) {
+Route::match(['get', 'post'], '/login/demo/{role}', function ($role) {
     if (!app()->environment('local') || config('app.debug') !== true) {
         abort(403, 'الدخول التجريبي السريع معطل تماماً في بيئة التشغيل لسلامة النظام.');
     }

@@ -16,13 +16,46 @@ class AdminErpStoreController extends Controller
 {
     public function index()
     {
-        $catalog = ErpCatalogItem::latest()->get();
+        $department = request()->query('department');
+        $catalogQuery = ErpCatalogItem::latest();
+        if ($department && $department !== 'all') {
+            $catalogQuery->where('department', $department);
+        }
+
+        $catalogItems = $catalogQuery->paginate(15);
+        $catalog = $catalogItems; // For backward compatibility
+        $proposalCatalogItems = ErpCatalogItem::where('is_active', true)->get();
+        $departments = ErpCatalogItem::select('department')->distinct()->pluck('department')->filter()->values();
+        if ($departments->isEmpty()) {
+            $departments = collect(['المبيعات والحسابات', 'المخازن والتوريدات', 'الموارد البشرية والمرتبات', 'الربط الضريبي والـ API', 'التصنيع وخطوط الإنتاج']);
+        }
+
         $orders = ErpOrder::with('user')->latest()->paginate(15);
         $proposals = ErpProposal::latest()->paginate(10);
         $customRequests = ErpCustomRequest::latest()->paginate(10);
         $clients = User::where('is_active', true)->select('id', 'name', 'phone', 'email')->get();
+        $activeTab = request()->query('tab', 'catalog');
 
-        return view('admin.erp-store.index', compact('catalog', 'orders', 'proposals', 'customRequests', 'clients'));
+        $counts = [
+            'catalog_total'  => ErpCatalogItem::count(),
+            'features_count' => ErpCatalogItem::where('is_active', true)->count(),
+            'orders_pending' => ErpOrder::where('status', 'pending')->count(),
+            'custom_pending' => ErpCustomRequest::where('status', 'pending')->count(),
+            'proposals_sent' => ErpProposal::count(),
+        ];
+
+        return view('admin.erp-store.index', compact(
+            'catalogItems',
+            'catalog',
+            'proposalCatalogItems',
+            'departments',
+            'orders',
+            'proposals',
+            'customRequests',
+            'clients',
+            'activeTab',
+            'counts'
+        ));
     }
 
     public function toggleCatalogItem(ErpCatalogItem $item)

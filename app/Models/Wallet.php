@@ -14,6 +14,8 @@ class Wallet extends Model
     protected $fillable = [
         'user_id',
         'balance',
+        'cash_balance',
+        'bonus_balance',
         'currency',
         'is_locked',
     ];
@@ -22,6 +24,8 @@ class Wallet extends Model
     {
         return [
             'balance' => 'decimal:2',
+            'cash_balance' => 'decimal:2',
+            'bonus_balance' => 'decimal:2',
             'is_locked' => 'boolean',
         ];
     }

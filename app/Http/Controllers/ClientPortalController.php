@@ -39,6 +39,7 @@ class ClientPortalController extends Controller
         $wallet = Wallet::firstOrCreate(
             ['user_id' => $user->id],
             [
+                'balance'       => 0.00,
                 'cash_balance'  => 0.00,
                 'bonus_balance' => 0.00,
                 'currency'      => 'EGP',
@@ -46,11 +47,20 @@ class ClientPortalController extends Controller
             ]
         );
 
-        $activeBookings = Booking::where('user_id', $user->id)
+        $recentBookings = Booking::where('user_id', $user->id)
             ->with(['service', 'package'])
             ->latest()
             ->take(5)
             ->get();
+        $activeBookings = $recentBookings;
+
+        $activeBookingsCount = Booking::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'in_progress', 'scheduled', 'confirmed'])
+            ->count();
+
+        $completedBookingsCount = Booking::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->count();
 
         $recentTransactions = WalletTransaction::where('user_id', $user->id)
             ->latest()
@@ -62,15 +72,23 @@ class ClientPortalController extends Controller
             ->take(5)
             ->get();
 
-        $devicesCount = ClientDevice::where('user_id', $user->id)->count();
-        $erpOrdersCount = ErpOrder::where('user_id', $user->id)->where('status', 'active')->count();
+        $openTicketsCount = Ticket::where('user_id', $user->id)
+            ->whereIn('status', ['open', 'in_progress', 'pending'])
+            ->count();
+
+        $devicesCount = class_exists(ClientDevice::class) ? ClientDevice::where('user_id', $user->id)->count() : 0;
+        $erpOrdersCount = class_exists(ErpOrder::class) ? ErpOrder::where('user_id', $user->id)->where('status', 'active')->count() : 0;
 
         return view('portal.index', compact(
             'user',
             'wallet',
+            'recentBookings',
             'activeBookings',
+            'activeBookingsCount',
+            'completedBookingsCount',
             'recentTransactions',
             'recentTickets',
+            'openTicketsCount',
             'devicesCount',
             'erpOrdersCount'
         ));

@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api/paymob/webhook',
             'api/ai/chat',
+            'login/demo/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

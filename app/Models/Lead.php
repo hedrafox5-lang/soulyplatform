@@ -21,8 +21,10 @@ class Lead extends Model
      */
     public function service()
     {
+        $foreignKey = 'interested_service_id';
+
         if (class_exists(\App\Models\Service::class)) {
-            return $this->belongsTo(\App\Models\Service::class, 'service_id')->withDefault([
+            return $this->belongsTo(\App\Models\Service::class, $foreignKey)->withDefault([
                 'title_ar' => 'خدمة عامة / استشارة تقنية',
                 'name'     => 'General Service',
                 'price'    => 0.00,
@@ -30,14 +32,14 @@ class Lead extends Model
         }
 
         if (class_exists(\App\Models\CatalogItem::class)) {
-            return $this->belongsTo(\App\Models\CatalogItem::class, 'service_id')->withDefault([
+            return $this->belongsTo(\App\Models\CatalogItem::class, $foreignKey)->withDefault([
                 'name_ar' => 'خدمة عامة / استشارة تقنية',
                 'name'    => 'General Service',
                 'price'   => 0.00,
             ]);
         }
 
-        return $this->belongsTo(\App\Models\Service::class, 'service_id')->withDefault();
+        return $this->belongsTo(\App\Models\Service::class, $foreignKey)->withDefault();
     }
 
     /**
@@ -54,6 +56,11 @@ class Lead extends Model
     public function user()
     {
         return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
+
+    public function assignedStaff()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'assigned_to');
     }
 
     public function activities()

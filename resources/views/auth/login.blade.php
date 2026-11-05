@@ -52,7 +52,7 @@
                         <input type="text" 
                                id="login" 
                                name="phone" 
-                               value="{{ old('login') }}" 
+                               value="{{ old('phone', old('login')) }}" 
                                required 
                                autofocus
                                autocomplete="username"
@@ -66,7 +66,7 @@
                 <div class="space-y-1.5 text-right">
                     <div class="flex items-center justify-between">
                         <label for="password" class="block text-xs font-bold text-slate-300 font-cairo">كلمة المرور</label>
-                        <span class="text-[11px] text-slate-500 font-mono">افتراضياً: password</span>
+                        <span class="text-[11px] text-slate-500 font-mono">افتراضياً: password123</span>
                     </div>
                     <div class="relative">
                         <input :type="showPass ? 'text' : 'password'" 
@@ -148,26 +148,17 @@
                         🛠️ دخول سريع لبيئة التطوير (Developer Quick-Access):
                     </p>
                     <div class="flex items-center justify-center gap-2 flex-wrap text-xs font-cairo">
-                        <form action="{{ route('login.demo', 'admin') }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="px-2.5 py-1.5 rounded-lg bg-obsidian-surface hover:bg-amber-500/20 text-cyber-gold border border-amber-500/40 text-[10px] sm:text-[11px] font-bold transition-all active:scale-95">
-                                👑 [المدير العام]
-                            </button>
-                        </form>
+                        <a href="{{ route('login.demo', 'admin') }}" class="px-2.5 py-1.5 rounded-lg bg-obsidian-surface hover:bg-amber-500/20 text-cyber-gold border border-amber-500/40 text-[10px] sm:text-[11px] font-bold transition-all active:scale-95 inline-flex items-center gap-1">
+                            👑 [المدير العام]
+                        </a>
                         <span class="text-slate-600">|</span>
-                        <form action="{{ route('login.demo', 'client') }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="px-2.5 py-1.5 rounded-lg bg-obsidian-surface hover:bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/40 text-[10px] sm:text-[11px] font-bold transition-all active:scale-95">
-                                👤 [عميل تجريبي]
-                            </button>
-                        </form>
+                        <a href="{{ route('login.demo', 'client') }}" class="px-2.5 py-1.5 rounded-lg bg-obsidian-surface hover:bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/40 text-[10px] sm:text-[11px] font-bold transition-all active:scale-95 inline-flex items-center gap-1">
+                            👤 [عميل تجريبي]
+                        </a>
                         <span class="text-slate-600">|</span>
-                        <form action="{{ route('login.demo', 'staff') }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="px-2.5 py-1.5 rounded-lg bg-obsidian-surface hover:bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] sm:text-[11px] font-bold transition-all active:scale-95">
-                                🔧 [مهندس سولي]
-                            </button>
-                        </form>
+                        <a href="{{ route('login.demo', 'staff') }}" class="px-2.5 py-1.5 rounded-lg bg-obsidian-surface hover:bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] sm:text-[11px] font-bold transition-all active:scale-95 inline-flex items-center gap-1">
+                            🔧 [مهندس سولي]
+                        </a>
                     </div>
                 </div>
             @endif

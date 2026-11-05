@@ -19,23 +19,40 @@ class AdminWalletController extends Controller
      */
     public function index(Request $request)
     {
-        $pendingDeposits = WalletTransaction::where('type', 'deposit')
-            ->where('status', 'pending')
-            ->with(['user', 'wallet'])
+        $status = $request->query('status');
+
+        $transactions = WalletTransaction::with(['user', 'wallet'])
+            ->when($status, fn($q) => $q->where('status', $status))
             ->latest()
             ->paginate(15);
 
-        $totalCash = Wallet::sum('cash_balance');
-        $totalBonus = Wallet::sum('bonus_balance');
+        $pendingDeposits = $transactions;
+        $pendingCount = WalletTransaction::where('status', 'pending')->count();
+        $approvedSum = (float) WalletTransaction::where('status', 'approved')->where('type', 'deposit')->sum('amount');
 
-        $gatewaySettings = [
-            'vodafone_cash_number' => Setting::get('vodafone_cash_number', '01000000000'),
-            'instapay_handle'      => Setting::get('instapay_handle', 'souly@instapay'),
-            'bank_account_iban'    => Setting::get('bank_account_iban', 'EG00000000000000000000000'),
-            'bank_name'            => Setting::get('bank_name', 'البنك الأهلي المصري'),
+        $totalCash = (float) Wallet::sum('cash_balance');
+        $totalBonus = (float) Wallet::sum('bonus_balance');
+
+        $gateways = [
+            'vodafone_cash' => Setting::get('payment_vodafone_cash', Setting::get('vodafone_cash_number', '01026042784')),
+            'instapay'      => Setting::get('payment_instapay', Setting::get('instapay_handle', 'souly@instapay')),
+            'bank_account'  => Setting::get('payment_bank_account', Setting::get('bank_name', 'CIB Bank - Souly Tech')),
         ];
+        $gatewaySettings = $gateways;
 
-        return view('admin.wallets.index', compact('pendingDeposits', 'totalCash', 'totalBonus', 'gatewaySettings'));
+        $users = User::where('is_active', true)->select('id', 'name', 'phone', 'email')->get();
+
+        return view('admin.wallets.index', compact(
+            'transactions',
+            'pendingDeposits',
+            'pendingCount',
+            'approvedSum',
+            'totalCash',
+            'totalBonus',
+            'gateways',
+            'gatewaySettings',
+            'users'
+        ));
     }
 
     /**

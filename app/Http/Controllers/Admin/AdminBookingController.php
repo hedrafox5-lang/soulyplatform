@@ -21,7 +21,7 @@ class AdminBookingController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Booking::with(['service', 'package', 'user', 'assignedEngineer']);
+        $query = Booking::with(['service', 'package', 'user', 'assignedStaff']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -32,9 +32,10 @@ class AdminBookingController extends Controller
         }
 
         $bookings = $query->latest()->paginate(15);
-        $engineers = User::whereIn('role', ['admin', 'technician'])->get();
+        $staffMembers = User::whereIn('role', ['admin', 'staff', 'technician'])->where('is_active', true)->get();
+        $engineers = $staffMembers;
 
-        return view('admin.bookings.index', compact('bookings', 'engineers'));
+        return view('admin.bookings.index', compact('bookings', 'staffMembers', 'engineers'));
     }
 
     /**

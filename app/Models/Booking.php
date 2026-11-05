@@ -63,6 +63,11 @@ class Booking extends Model
         return $this->belongsTo(User::class, 'assigned_staff_id');
     }
 
+    public function assignedEngineer(): BelongsTo
+    {
+        return $this->assignedStaff();
+    }
+
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);

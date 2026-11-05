@@ -22,19 +22,32 @@ class AdminLeadController extends Controller
         $status = $request->query('status');
         $sector = $request->query('sector');
 
-        $leads = Lead::with('service')
+        $leads = Lead::with(['service', 'assignedStaff', 'activities'])
             ->when($status, fn($q) => $q->where('status', $status))
             ->when($sector, fn($q) => $q->where('sector', $sector))
             ->latest()
             ->paginate(15);
 
-        return view('admin.leads.index', compact('leads'));
+        $pipelineCounts = [
+            'all'           => Lead::count(),
+            'new'           => Lead::where('status', 'new')->count(),
+            'contacted'     => Lead::where('status', 'contacted')->count(),
+            'qualified'     => Lead::where('status', 'qualified')->count(),
+            'proposal_sent' => Lead::where('status', 'proposal_sent')->count(),
+            'won'           => Lead::where('status', 'won')->count(),
+            'lost'          => Lead::where('status', 'lost')->count(),
+        ];
+
+        $services = Service::all();
+
+        return view('admin.leads.index', compact('leads', 'pipelineCounts', 'services'));
     }
 
     public function show(Lead $lead)
     {
-        $lead->load(['service', 'activities.user']);
-        return view('admin.leads.show', compact('lead'));
+        $lead->load(['service', 'activities.user', 'assignedStaff']);
+        $staffMembers = User::whereIn('role', ['admin', 'staff', 'technician'])->where('is_active', true)->get();
+        return view('admin.leads.show', compact('lead', 'staffMembers'));
     }
 
     public function store(Request $request)
